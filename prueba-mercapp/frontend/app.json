@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "name": "MercApp",
+    "slug": "prueba-mercapp",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "extra": {
+      "eas": {
+        "projectId": "d5eb6a40-d3c1-4369-9f07-b184de66c119"
+      }
+    },
+    "android": {
+      "package": "com.velascodev.pruebamercapp"
+    }
+  }
+}

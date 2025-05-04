@@ -1,0 +1,100 @@
+import React from 'react';
+import { View, Text, Modal, TouchableOpacity, StyleSheet } from 'react-native';
+
+export default function CustomAlert({ visible, title, message, onClose, onConfirm = null, showConfirm = false }) {
+    return (
+        <Modal
+            transparent={true}
+            visible={visible}
+            animationType="slide"
+            onRequestClose={onClose}
+        >
+            <View style={styles.centeredView}>
+                <View style={styles.alertView}>
+                    <Text style={styles.title}>{title}</Text>
+                    <Text style={styles.message}>{message}</Text>
+                    <View style={styles.buttonContainer}>
+                        <TouchableOpacity
+                            style={[styles.button, styles.cancelButton]}
+                            onPress={onClose}
+                        >
+                            <Text style={styles.buttonText}>Cancelar</Text>
+                        </TouchableOpacity>
+                        {showConfirm && (
+                            <TouchableOpacity
+                                style={[styles.button, styles.confirmButton]}
+                                onPress={() => {
+                                    onConfirm();
+                                    onClose();
+                                }}
+                            >
+                                <Text style={styles.buttonText}>Confirmar</Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                </View>
+            </View>
+        </Modal>
+    );
+}
+
+const styles = StyleSheet.create({
+    
+    alertView: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5, // Para Android
+        backgroundColor: 'white',
+        borderRadius: 10,
+        padding: 20,
+        width: '80%',
+        maxWidth: 500,
+        alignItems: 'center',
+        transform: [{ scale: 1 }] // Ayuda con la animación
+    },
+    centeredView: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)'
+    },
+    title: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 10
+    },
+    message: {
+        fontSize: 16,
+        marginBottom: 20,
+        textAlign: 'center'
+    },
+    button: {
+        padding: 10,
+        borderRadius: 5,
+        minWidth: 100,
+        marginHorizontal: 10
+        // backgroundColor: '#2196F3',
+        // padding: 10,
+        // borderRadius: 5,
+        // width: '50%',
+        // marginHorizontal: 10
+    },
+    cancelButton: {
+        backgroundColor: '#6c757d'
+    },
+    confirmButton: {
+        backgroundColor: '#dc3545'
+    },
+    buttonText: {
+        color: 'white',
+        textAlign: 'center',
+        fontWeight: 'bold'
+    },
+    buttonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        width: '100%'
+    },
+});
