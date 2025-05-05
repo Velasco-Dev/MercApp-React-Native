@@ -1,179 +1,186 @@
-import React, { useState, useMemo } from 'react';
-import { View, Text, FlatList, TextInput, Button, StyleSheet, Modal } from 'react-native';
-import { initialProducts, initialSales } from '../data/data.jsx';
+import React, { useState, useEffect, useMemo } from 'react';
+import {
+    View, Text, FlatList, Platform, TouchableOpacity, StyleSheet,
+    Modal, KeyboardAvoidingView, ActivityIndicator, Button
+} from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
+import { COLORS } from '../components/themes/Colors';
+import { theme } from '../components/themes/Theme';
+import CustomAlert from '../components/common/CustomAlert';
+import { useVentas } from '../services/hooks/venta.hooks';
+import { useProductos } from '../services/hooks/producto.hooks';
+
+import { ProductModal } from '../components/common/modals/ProductModal';
 
 export default function VendorScreen() {
 
-    const [products, setProducts] = useState(initialProducts);
-    const [sales, setSales] = useState(initialSales);
-    const [cart, setCart] = useState([]); // Nuevo estado para el carrito
+    // Estados y hooks
+    const { ventas, loading, error, fetchVentas, registrarVenta } = useVentas();
+    const { productos, fetchProductos } = useProductos();
+
+    const [cart, setCart] = useState([]);
+
     const [modalVisible, setModalVisible] = useState(false);
 
-    // Calcular el total de ventas del día
-    const todayTotalSales = useMemo(() => {
-        const today = new Date().toISOString().split('T')[0];
-        return sales
-            .filter(sale => sale.date === today)
-            .reduce((total, sale) => total + sale.total, 0);
-    }, [sales]);
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertMessage, setAlertMessage] = useState('');
 
-    const addToCart = (product, quantity = 1) => {
-        const existingItem = cart.find(item => item.productId === product.id);
+    // Cargar datos iniciales
+    useEffect(() => {
+        fetchVentas();
+        fetchProductos();
+    }, [fetchVentas, fetchProductos]);
 
-        if (existingItem) {
-            setCart(cart.map(item =>
-                item.productId === product.id
-                    ? { ...item, qty: item.qty + quantity }
-                    : item
-            ));
-        } else {
-            setCart([...cart, {
-                productId: product.id,
-                productName: product.name,
-                qty: quantity,
-                price: product.price
-            }]);
-        }
-    };
-
-    const subtractToCart = (product, quantity = 1) => {
-        const existingItem = cart.find(item => item.productId === product.id);
-
-        if (existingItem) {
-            // Si la cantidad es 0 o menor, removemos el item del carrito
-            if (existingItem.qty <= quantity) {
-                setCart(cart.filter(item => item.productId !== product.id));
+    const handleRegisterSale = async (cartItems) => {
+        if (!cartItems || cartItems.length === 0) return;
+    
+        try {
+            const ventaData = {
+                items: cartItems.map(item => ({
+                    idProducto: item.idProducto,
+                    cantidadVendida: item.cantidadVendida,
+                    precioUnitario: item.precioUnitario,
+                    descuentos: item.descuentos || 0,
+                    nombre: item.nombre // si necesitas el nombre para mostrar
+                })),
+                total: cartItems.reduce((sum, item) => sum + item.subTotal, 0),
+                fecha: new Date().toISOString(),
+                estado: true
+            };
+    
+            const success = await registrarVenta(ventaData);
+            
+            if (success) {
+                setAlertMessage('Venta registrada exitosamente');
+                setCart([]);
+                await fetchVentas(); // Actualizar la lista de ventas
             } else {
-                // Si no, restamos la cantidad
-                setCart(cart.map(item =>
-                    item.productId === product.id
-                        ? { ...item, qty: item.qty - quantity }
-                        : item
-                ));
+                setAlertMessage('Error al registrar la venta');
             }
+            setAlertVisible(true);
+        } catch (error) {
+            console.error('Error al registrar venta:', error);
+            setAlertMessage('Error al procesar la venta');
+            setAlertVisible(true);
         }
     };
 
-    const registerSale = () => {
-        if (cart.length === 0) return;
-
-        // Actualizar stock
-        const updatedProducts = products.map(product => {
-            const cartItem = cart.find(item => item.productId === product.id);
-            if (cartItem) {
-                return { ...product, quantity: product.quantity - cartItem.qty };
-            }
-            return product;
-        });
-
-        // Crear nueva venta
-        const newSale = {
-            id: `s${Date.now()}`,
-            items: cart,
-            total: cart.reduce((sum, item) => sum + (item.price * item.qty), 0),
-            date: new Date().toISOString().split('T')[0]
-        };
-
-        setProducts(updatedProducts);
-        setSales([...sales, newSale]);
-        setCart([]); // Limpiar carrito
+    const handleConfirmSale = (cartItems) => {
+        // Procesar la venta con los items del carrito
+        handleRegisterSale(cartItems);
         setModalVisible(false);
     };
 
-    return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Ventas Realizadas</Text>
-
-            <View style={styles.totalContainer}>
-                <Text style={styles.totalLabel}>Total del día:</Text>
-                <Text style={styles.totalAmount}>${todayTotalSales}</Text>
+    if (loading) {
+        return (
+            <View style={styles.centerContainer}>
+                <ActivityIndicator size="large" color={COLORS.PRIMARY} />
             </View>
+        );
+    }
 
-            <Button title="Nueva Venta" onPress={() => setModalVisible(true)} />
+    if (error) {
+        return (
+            <View style={styles.centerContainer}>
+                <Text style={styles.errorText}>{error}</Text>
+                <TouchableOpacity
+                    style={theme.button.primary}
+                    onPress={fetchVentas}
+                >
+                    <Text style={theme.button.textPrimary}>Reintentar</Text>
+                </TouchableOpacity>
+            </View>
+        );
+    }
 
-            <FlatList
-                data={sales}
-                keyExtractor={sale => sale.id}
-                renderItem={({ item }) => (
-                    <View style={styles.saleItem}>
-                        <Text style={styles.saleDate}>{item.date}</Text>
-                        {item.items.map(product => (
-                            <Text key={product.productId}>
-                                {product.productName} x{product.qty} - ${product.price * product.qty * 1.19}
-                            </Text>
-                        ))}
-                        <Text style={styles.saleTotal}>Total: ${item.total * 1.19}</Text>
-                    </View>
-                )}
-            />
+    return (
+        <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={{ flex: 1 }}
+        >
+            <View style={styles.container}>
+                <Text style={styles.title}>Ventas Realizadas</Text>
 
-            <Modal
-                animationType="slide"
-                transparent={true}
-                visible={modalVisible}
-                onRequestClose={() => setModalVisible(false)}
-            >
-                <View style={styles.modalContainer}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Seleccionar Productos</Text>
-                        <FlatList
-                            data={products}
-                            keyExtractor={p => p.id}
-                            renderItem={({ item }) => (
-                                <View style={styles.productRow}>
-                                    <Text>{item.name} (Stock: {item.quantity} - Precio: {item.price})</Text>
-                                    <View style={styles.productActions}>
-                                        <Button
-                                            title="-"
-                                            onPress={() => subtractToCart(item)}
-                                            disabled={!cart.find(cartItem => cartItem.productId === item.id)?.qty}
-                                        />
-                                        <Button
-                                            title="+"
-                                            onPress={() => addToCart(item)}
-                                            disabled={item.quantity === 0}
-                                        />
-                                    </View>
-                                </View>
-                            )}
-                        />
+                <View style={styles.totalContainer}>
+                    <Text style={styles.totalLabel}>Total del día:</Text>
+                    <Text style={styles.totalAmount}>$</Text>
+                    {/* {todayTotalSales} */}
+                </View>
 
-                        {cart.length > 0 && (
-                            <View style={styles.cartSection}>
-                                <Text style={styles.cartTitle}>Carrito:</Text>
-                                {cart.map(item => (
-                                    <Text key={item.productId}>
-                                        {item.productName} x{item.qty} - ${item.price * item.qty} + IVA 19% ({item.price * 1.19}) = ${item.price * item.qty * 1.19}
-                                    </Text>
-                                ))}
-                                <Text style={styles.cartTotal}>
-                                    Total: ${cart.reduce((sum, item) => sum + (item.price * item.qty * 1.19), 0)}
+                <TouchableOpacity
+                    style={theme.button.primary}
+                    onPress={() => setModalVisible(true)}
+                    disabled={loading}
+                >
+                    <Text style={theme.button.textPrimary}>
+                        {loading ? 'Registrando...' : 'Nueva Venta'}
+                    </Text>
+                </TouchableOpacity>
+                {/* <Button title="Nueva Venta" onPress={} /> */}
+
+                <View style={styles.salesContainer}>
+                    <FlatList
+                        data={ventas}
+                        keyExtractor={sale => sale.idVenta}
+                        style={styles.salesList}
+                        ListEmptyComponent={() => (
+                            <View style={styles.emptyContainer}>
+                                <Text style={styles.emptyText}>
+                                    No hay ventas registradas
                                 </Text>
                             </View>
                         )}
-
-                        <View style={styles.modalButtons}>
-                            <Button title="Cancelar" onPress={() => {
-                                setCart([]);
-                                setModalVisible(false);
-                            }} />
-                            <Button
-                                title="Confirmar Venta"
-                                onPress={registerSale}
-                                disabled={cart.length === 0}
-                            />
-                        </View>
-                    </View>
+                        renderItem={({ item }) => (
+                            <View style={styles.saleItem}>
+                                <View style={styles.saleHeader}>
+                                    <Text style={styles.saleDate}>
+                                        {new Date(item.fecha).toLocaleDateString()}
+                                    </Text>
+                                    <Text style={styles.saleTotal}>
+                                        Total: ${item.total.toFixed(2)}
+                                    </Text>
+                                </View>
+                                <View style={styles.salesList}>
+                                    {item.items.map(product => (
+                                        <View key={product.idProducto} style={styles.saleProduct}>
+                                            <Text style={styles.productName}>
+                                                {product.nombre} x{product.cantidadVendida}
+                                            </Text>
+                                            <Text style={styles.productPrice}>
+                                                ${(product.precioUnitario * product.cantidadVendida).toFixed(2)}
+                                            </Text>
+                                        </View>
+                                    ))}
+                                </View>
+                            </View>
+                        )}
+                    />
                 </View>
-            </Modal>
-        </View>
+
+                {/* // En el return */}
+                <ProductModal
+                    visible={modalVisible}
+                    onClose={() => setModalVisible(false)}
+                    productos={productos}
+                    onConfirm={handleConfirmSale}
+                />
+
+                <CustomAlert
+                    visible={alertVisible}
+                    message={alertMessage}
+                    onClose={() => setAlertVisible(false)}
+                />
+            </View>
+        </KeyboardAvoidingView>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 20
+        padding: 20,
+        userSelect: 'none',
+        cursor: 'default'
     },
     title: {
         fontSize: 18,
@@ -195,7 +202,9 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(0,0,0,0.5)'
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        userSelect: 'none',
+        cursor: 'default'
     },
     modalContent: {
         backgroundColor: 'white',
@@ -279,5 +288,62 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
         color: '#2ecc71',
+    },
+    salesContainer: {
+        flex: 1,
+        marginTop: 20,
+    },
+    salesList: {
+        flex: 1,
+    },
+    saleItem: {
+        backgroundColor: COLORS.BLANCO,
+        borderRadius: 8,
+        padding: 15,
+        marginVertical: 8,
+        ...Platform.select({
+            ios: {
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.25,
+                shadowRadius: 3.84,
+            },
+            android: {
+                elevation: 5,
+            },
+            web: {
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            },
+        }),
+    },
+    saleHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 10,
+    },
+    saleDate: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: COLORS.TEXT,
+    },
+    saleProduct: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingVertical: 5,
+    },
+    productName: {
+        color: COLORS.SECONDARY,
+    },
+    productPrice: {
+        fontWeight: '500',
+        color: COLORS.TEXT,
+    },
+    emptyContainer: {
+        padding: 20,
+        alignItems: 'center',
+    },
+    emptyText: {
+        color: COLORS.SECONDARY,
+        fontSize: 16,
     },
 });

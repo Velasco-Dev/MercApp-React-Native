@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import {
     View, Text, StyleSheet, TextInput, ScrollView,
-    KeyboardAvoidingView, Platform, ActivityIndicator, TouchableOpacity
+    KeyboardAvoidingView, Platform, ActivityIndicator, TouchableOpacity,
+    ImageBackground
 } from 'react-native';
 import CustomAlert from '../components/common/CustomAlert.jsx';
 
@@ -125,99 +126,106 @@ export default function RegistroScreen({ navigation }) {
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             style={{ flex: 1 }}
         >
-            <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
-                <View style={styles.container}>
-                    <View style={styles.registerForm}>
-                        <Text style={styles.title}>Formulario de Registro</Text>
-                        <TextInput
-                            placeholder="Nombre"
-                            value={formData.nombrePersona}
-                            onChangeText={(text) => setFormData({ ...formData, nombrePersona: text })}
-                            style={styles.input}
-                            editable={!loading}
-                        />
-                        <TextInput
-                            placeholder="Apellido"
-                            value={formData.apellido}
-                            onChangeText={(text) => setFormData({ ...formData, apellido: text })}
-                            style={styles.input}
-                            editable={!loading}
-                        />
-                        <TextInput
-                            placeholder="Edad"
-                            value={formData.edad}
-                            onChangeText={(text) => {
-                                const numeric = text.replace(/[^0-9]/g, ''); // Solo permitir números
-                                setFormData({ ...formData, edad: numeric })
-                            }}
-                            keyboardType="numeric"
-                            style={styles.input}
-                            editable={!loading}
-                        />
-                        <TextInput
-                            placeholder="Identificación"
-                            value={formData.identificacion}
-                            onChangeText={(text) => {
-                                const numeric = text.replace(/[^0-9]/g, ''); // Solo permitir números
-                                setFormData({ ...formData, identificacion: numeric })
-                            }}
-                            keyboardType="numeric"
-                            style={styles.input}
-                            editable={!loading}
-                        />
-                        <TextInput
-                            autoCapitalize="none"
-                            placeholder="Correo"
-                            value={formData.correo}
-                            onChangeText={(text) => setFormData({ ...formData, correo: text })}
-                            keyboardType="email-address"
-                            style={styles.input}
-                            editable={!loading}
-                        />
-                        <TextInput
-                            autoCapitalize="none"
-                            placeholder="Contraseña"
-                            value={formData.password}
-                            onChangeText={handlePasswordChange}
-                            style={styles.input}
-                            editable={!loading}
-                        />
-                        <TextInput
-                            autoCapitalize="none"
-                            placeholder="Verificar Contraseña"
-                            value={verifyPassword}
-                            onChangeText={handleVerifyPasswordChange}
-                            style={[styles.input, passwordError ? styles.inputError : null]}
-                            editable={!loading}
-                        />
-                        {passwordError ? (
-                            <Text style={styles.errorText}>{passwordError}</Text>
-                        ) : null}
-                        {loading ? (
-                            <ActivityIndicator size="large" color={COLORS.SECONDARY} />
-                        ) : (
-                            <TouchableOpacity
-                                style={theme.button.primary}
-                                onPress={handleRegistro}>
-                                <Text style={theme.button.textPrimary}>Registrarse</Text>
-                            </TouchableOpacity>
+            <ImageBackground
+                source={require('../../assets/b-registro.webp')} // ajusta la ruta según tu estructura
+                style={theme.backgroundImage}
+                resizeMode="cover"
+                imageStyle={{ opacity: 1 }} // Ajusta la opacidad de la imagen de fondo
+            >
+                <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
+                    <View style={[styles.container, theme.container]}>
+                        <View style={styles.registerForm}>
+                            <Text style={styles.title}>Formulario de Registro</Text>
+                            <TextInput
+                                placeholder="Nombre"
+                                value={formData.nombrePersona}
+                                onChangeText={(text) => setFormData({ ...formData, nombrePersona: text })}
+                                style={styles.input}
+                                editable={!loading}
+                            />
+                            <TextInput
+                                placeholder="Apellido"
+                                value={formData.apellido}
+                                onChangeText={(text) => setFormData({ ...formData, apellido: text })}
+                                style={styles.input}
+                                editable={!loading}
+                            />
+                            <TextInput
+                                placeholder="Edad"
+                                value={formData.edad}
+                                onChangeText={(text) => {
+                                    const numeric = text.replace(/[^0-9]/g, ''); // Solo permitir números
+                                    setFormData({ ...formData, edad: numeric })
+                                }}
+                                keyboardType="numeric"
+                                style={styles.input}
+                                editable={!loading}
+                            />
+                            <TextInput
+                                placeholder="Identificación"
+                                value={formData.identificacion}
+                                onChangeText={(text) => {
+                                    const numeric = text.replace(/[^0-9]/g, ''); // Solo permitir números
+                                    setFormData({ ...formData, identificacion: numeric })
+                                }}
+                                keyboardType="numeric"
+                                style={styles.input}
+                                editable={!loading}
+                            />
+                            <TextInput
+                                autoCapitalize="none"
+                                placeholder="Correo"
+                                value={formData.correo}
+                                onChangeText={(text) => setFormData({ ...formData, correo: text })}
+                                keyboardType="email-address"
+                                style={styles.input}
+                                editable={!loading}
+                            />
+                            <TextInput
+                                autoCapitalize="none"
+                                placeholder="Contraseña"
+                                value={formData.password}
+                                onChangeText={handlePasswordChange}
+                                style={styles.input}
+                                editable={!loading}
+                            />
+                            <TextInput
+                                autoCapitalize="none"
+                                placeholder="Verificar Contraseña"
+                                value={verifyPassword}
+                                onChangeText={handleVerifyPasswordChange}
+                                style={[styles.input, passwordError ? styles.inputError : null]}
+                                editable={!loading}
+                            />
+                            {passwordError ? (
+                                <Text style={styles.errorText}>{passwordError}</Text>
+                            ) : null}
+                            {loading ? (
+                                <ActivityIndicator size="large" color={COLORS.SECONDARY} />
+                            ) : (
+                                <TouchableOpacity
+                                    style={theme.button.primary}
+                                    onPress={handleRegistro}>
+                                    <Text style={theme.button.textPrimary}>Registrarse</Text>
+                                </TouchableOpacity>
 
-                        )}
+                            )}
+                        </View>
+                        <CustomAlert
+                            visible={alertVisible}
+                            title={alertTitle}
+                            message={alertMessage}
+                            onClose={() => {
+                                setAlertVisible(false)
+                                // Si el título es "Registro de usuario" significa que fue exitoso
+                                if (alertTitle === 'Registro de usuario') {
+                                    navigation.replace('Login');
+                                }
+                            }}
+                        />
                     </View>
-                    <CustomAlert
-                        visible={alertVisible}
-                        title={alertTitle}
-                        message={alertMessage}
-                        onClose={() => {
-                            setAlertVisible(false)
-                            // Si el título es "Registro de usuario" significa que fue exitoso
-                            if (alertTitle === 'Registro de usuario') {
-                                navigation.replace('Login');
-                            }
-                        }}
-                    />
-                </View>
-            </ScrollView>
+                </ScrollView>
+            </ImageBackground>
         </KeyboardAvoidingView>
     );
 }
@@ -247,7 +255,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         padding: 40,
-        backgroundColor: '#fff',
+        backgroundColor: 'rgba(255, 255, 255, 0.50)',
     },
     registerForm: {
         ...Platform.select({

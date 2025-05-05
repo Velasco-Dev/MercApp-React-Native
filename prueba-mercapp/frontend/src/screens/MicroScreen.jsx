@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, FlatList, TextInput, Platform,
-  TouchableOpacity, StyleSheet, Dimensions, ScrollView
+  TouchableOpacity, StyleSheet, Dimensions, ScrollView,
+  KeyboardAvoidingView
 } from 'react-native';
 
 import { obtenerProductos, crearProducto } from '../services/producto/producto.service';
@@ -12,6 +13,8 @@ import CustomAlert from '../components/common/CustomAlert';
 import { MaterialIcons } from '@expo/vector-icons';
 
 import { Picker } from '@react-native-picker/picker';
+
+import { useProductos } from '../services/hooks/producto.hooks';
 
 export default function MicroScreen() {
 
@@ -30,6 +33,15 @@ export default function MicroScreen() {
     'Otros'
   ];
 
+  const {
+    productos,
+    loading,
+    error,
+    fetchProductos,
+    addProducto,
+    updateProducto
+  } = useProductos();
+
   const [formData, setFormData] = useState({
     idProducto: '',
     nombre: '',
@@ -43,34 +55,23 @@ export default function MicroScreen() {
   const [filter, setFilter] = useState('');
   const [products, setProducts] = useState([]);
 
-  const filtered = products.filter(p =>
+  const filtered = productos.filter(p =>
     p.nombre.toLowerCase().includes(filter.toLowerCase()) ||
     p.categoria.toLowerCase().includes(filter.toLowerCase())
   );
 
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const loadProducts = async () => {
-      try {
-        const data = await obtenerProductos();
-        setProducts(data);
-      } catch (error) {
-        setAlertMessage('Error al cargar productos: ' + error.message);
-        setAlertVisible(true);
-      }
-    };
+    fetchProductos();
+  }, [fetchProductos]);
 
-    loadProducts();
-  }, []);
-
-  const addProduct = async () => {
+  const hanldeAddProduct = async () => {
 
     try {
 
-      setLoading(true);
+      loading(true);
       // Validaciones
       if (!formData.nombre || !formData.cantidad || !formData.precio) {
         throw new Error('Por favor complete todos los campos requeridos');
@@ -83,24 +84,29 @@ export default function MicroScreen() {
         descuento: Number(formData.descuento)
       };
 
-      const response = await crearProducto(productoData);
+      const success = await addProducto(productoData);
 
-      // Después de crear el producto, actualiza la lista
-      const updatedProducts = await obtenerProductos();
-      setProducts(updatedProducts);
+      if (success) {
+        setAlertMessage('Producto creado exitosamente');
+        // Limpiar formulario
+        setFormData({
+          idProducto: '',
+          nombre: '',
+          cantidad: '',
+          categoria: '',
+          precio: '',
+          estado: true,
+          descuento: ''
+        });
 
-      setAlertMessage('Producto creado exitosamente');
-      setAlertVisible(true);
-      // Limpiar formulario
-      setFormData({
-        idProducto: '',
-        nombre: '',
-        cantidad: '',
-        categoria: '',
-        precio: '',
-        estado: true,
-        descuento: ''
-      });
+        // Después de crear el producto, actualiza la lista
+        const updatedProducts = await fetchProductos();
+        setProducts(updatedProducts);
+
+      } else {
+
+        setAlertMessage('Error al crear el producto');
+      }
 
     } catch (error) {
 
@@ -109,160 +115,191 @@ export default function MicroScreen() {
 
     } finally {
 
-      setLoading(false);
+      loading(false);
+      setAlertVisible(true);
 
     }
   };
+
+  const handleEdit = async (id) => {
+    try {
+        const success = await updateProducto(id, formData);
+        
+        if (success) {
+            setAlertMessage('Producto actualizado exitosamente');
+            setFormData({
+                idProducto: '',
+                nombre: '',
+                cantidad: '',
+                categoria: '',
+                precio: '',
+                estado: true,
+                descuento: ''
+            });
+        } else {
+            setAlertMessage('Error al actualizar el producto');
+        }
+    } catch (error) {
+        setAlertMessage(error.message);
+    } finally {
+        setAlertVisible(true);
+    }
+};
 
   // Dentro del componente, antes del return
   const screenWidth = Dimensions.get('window').width;
   const numColumns = screenWidth >= 768 ? 5 : 3; // 3 columnas en pantallas grandes, 2 en pequeñas
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1 }}
+    >
+      <View style={[styles.container, theme.container]}>
 
-      <Text style={styles.title}>Registro de Producto</Text>
+        <Text style={styles.title}>Registro de Producto</Text>
 
-      <View style={styles.form}>
+        <View style={styles.form}>
 
-        <View style={styles.formRow}>
-          <View style={styles.inputContainer}>
-            <TextInput
-              placeholder="ID Producto"
-              value={formData.idProducto}
-              onChangeText={(text) => setFormData({ ...formData, idProducto: text })}
-              style={styles.input}
-            />
-          </View>
-          <View style={styles.inputContainer}>
-            <TextInput
-              placeholder="Nombre del Producto"
-              value={formData.nombre}
-              onChangeText={(text) => setFormData({ ...formData, nombre: text })}
-              style={styles.input}
-            />
-          </View>
-        </View>
-
-        <View style={styles.formRow}>
-          <View style={styles.inputContainer}>
-            <TextInput
-              placeholder="Cantidad"
-              value={formData.cantidad}
-              onChangeText={(text) => {
-                // Validar que solo se ingresen números
-                const numeric = text.replace(/[^0-9]/g, '');
-                // Actualizar el estado solo si es un número válido
-                setFormData({ ...formData, cantidad: numeric })
-              }}
-              keyboardType="numeric"
-              style={styles.input}
-            />
-          </View>
-          <View style={styles.inputContainer}>
-            <TextInput
-              placeholder="Precio"
-              value={formData.precio}
-              onChangeText={(text) => {
-                // Validar que solo se ingresen números
-                const numeric = text.replace(/[^0-9]/g, '');
-                // Actualizar el estado solo si es un número válido
-                setFormData({ ...formData, precio: numeric })
-              }}
-              keyboardType="numeric"
-              style={styles.input}
-            />
-          </View>
-        </View>
-
-        <View style={styles.formRow}>
-          <View style={styles.inputContainer}>
-            <Picker
-              selectedValue={formData.categoria}
-              onValueChange={(itemValue) =>
-                setFormData({ ...formData, categoria: itemValue })
-              }
-              style={theme.picker}
-            >
-              {categorias.map((cat, index) => (
-                <Picker.Item
-                  key={index}
-                  label={cat}
-                  value={index === 0 ? '' : cat}
-                />
-              ))}
-            </Picker>
-          </View>
-          <View style={styles.inputContainer}>
-            <TextInput
-              placeholder="Descuento"
-              value={formData.descuento}
-              onChangeText={(text) => {
-                // Validar que solo se ingresen números
-                const numeric = text.replace(/[^0-9]/g, '');
-                // Actualizar el estado solo si es un número válido
-                setFormData({ ...formData, descuento: numeric })
-              }}
-              keyboardType="numeric"
-              style={styles.input}
-            />
-          </View>
-        </View>
-
-        <TouchableOpacity
-          style={theme.button.primary}
-          onPress={addProduct}
-          disabled={loading}
-        >
-          <Text style={theme.button.textPrimary}>
-            {loading ? 'Registrando...' : 'Registrar Producto'}
-          </Text>
-        </TouchableOpacity>
-
-        <CustomAlert
-          visible={alertVisible}
-          message={alertMessage}
-          onClose={() => setAlertVisible(false)}
-        />
-      </View>
-
-      <TextInput placeholder="Buscar producto" value={filter} onChangeText={setFilter} style={styles.inputFilter} />
-      <ScrollView style={styles.container}>
-        <FlatList
-          data={filtered}
-          keyExtractor={p => p.idProducto}
-          numColumns={numColumns} // Añade esta línea para mostrar 2 columnas
-          columnWrapperStyle={theme.row} // Añade esta línea para el estilo de las filas
-          // style={theme.flatList}
-          // contentContainerStyle={theme.flatListContent}
-          renderItem={({ item }) => (
-            <View style={theme.card}>
-              <Text style={theme.name}>{item.nombre}</Text>
-              <Text style={theme.info}>Precio: ${item.precio}</Text>
-              <Text style={theme.info}>Stock: {item.cantidad}</Text>
-              <Text style={theme.info}>Categoría: {item.categoria}</Text>
-              <Text style={theme.info}>Descuento: {item.descuento}%</Text>
-              <View style={theme.card.buttonCardContainer}>
-                <TouchableOpacity
-                  style={[theme.button.editar, theme.card.buttonCard]}
-                  onPress={() => handleEdit(item.idProducto)}
-                >
-                  <View style={theme.button.buttonContent}>
-                    <MaterialIcons
-                      name="edit"
-                      size={24}
-                      color={COLORS.BLANCO}
-                      style={theme.button.icon}
-                    />
-                  </View>
-                </TouchableOpacity>
-              </View>
+          <View style={styles.formRow}>
+            <View style={styles.inputContainer}>
+              <TextInput
+                placeholder="ID Producto"
+                value={formData.idProducto}
+                onChangeText={(text) => setFormData({ ...formData, idProducto: text })}
+                style={styles.input}
+              />
             </View>
-          )}
-        />
-      </ScrollView>
+            <View style={styles.inputContainer}>
+              <TextInput
+                placeholder="Nombre del Producto"
+                value={formData.nombre}
+                onChangeText={(text) => setFormData({ ...formData, nombre: text })}
+                style={styles.input}
+              />
+            </View>
+          </View>
 
-    </View>
+          <View style={styles.formRow}>
+            <View style={styles.inputContainer}>
+              <TextInput
+                placeholder="Cantidad"
+                value={formData.cantidad}
+                onChangeText={(text) => {
+                  // Validar que solo se ingresen números
+                  const numeric = text.replace(/[^0-9]/g, '');
+                  // Actualizar el estado solo si es un número válido
+                  setFormData({ ...formData, cantidad: numeric })
+                }}
+                keyboardType="numeric"
+                style={styles.input}
+              />
+            </View>
+            <View style={styles.inputContainer}>
+              <TextInput
+                placeholder="Precio"
+                value={formData.precio}
+                onChangeText={(text) => {
+                  // Validar que solo se ingresen números
+                  const numeric = text.replace(/[^0-9]/g, '');
+                  // Actualizar el estado solo si es un número válido
+                  setFormData({ ...formData, precio: numeric })
+                }}
+                keyboardType="numeric"
+                style={styles.input}
+              />
+            </View>
+          </View>
+
+          <View style={styles.formRow}>
+            <View style={styles.inputContainer}>
+              <Picker
+                selectedValue={formData.categoria}
+                onValueChange={(itemValue) =>
+                  setFormData({ ...formData, categoria: itemValue })
+                }
+                style={theme.picker}
+              >
+                {categorias.map((cat, index) => (
+                  <Picker.Item
+                    key={index}
+                    label={cat}
+                    value={index === 0 ? '' : cat}
+                  />
+                ))}
+              </Picker>
+            </View>
+            <View style={styles.inputContainer}>
+              <TextInput
+                placeholder="Descuento"
+                value={formData.descuento}
+                onChangeText={(text) => {
+                  // Validar que solo se ingresen números
+                  const numeric = text.replace(/[^0-9]/g, '');
+                  // Actualizar el estado solo si es un número válido
+                  setFormData({ ...formData, descuento: numeric })
+                }}
+                keyboardType="numeric"
+                style={styles.input}
+              />
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={theme.button.primary}
+            onPress={hanldeAddProduct}
+            disabled={loading}
+          >
+            <Text style={theme.button.textPrimary}>
+              {loading ? 'Registrando...' : 'Guardar'}
+            </Text>
+          </TouchableOpacity>
+
+          <CustomAlert
+            visible={alertVisible}
+            message={alertMessage}
+            onClose={() => setAlertVisible(false)}
+          />
+        </View>
+
+        <TextInput placeholder="Buscar producto" value={filter} onChangeText={setFilter} style={styles.inputFilter} />
+        <ScrollView style={styles.container}>
+          <FlatList
+            data={filtered}
+            keyExtractor={p => p.idProducto}
+            numColumns={numColumns} // Añade esta línea para mostrar 2 columnas
+            columnWrapperStyle={theme.row} // Añade esta línea para el estilo de las filas
+            // style={theme.flatList}
+            // contentContainerStyle={theme.flatListContent}
+            renderItem={({ item }) => (
+              <View style={theme.card}>
+                <Text style={theme.name}>{item.nombre}</Text>
+                <Text style={theme.info}>Precio: ${item.precio}</Text>
+                <Text style={theme.info}>Stock: {item.cantidad}</Text>
+                <Text style={theme.info}>Categoría: {item.categoria}</Text>
+                <Text style={theme.info}>Descuento: {item.descuento}%</Text>
+                <View style={theme.card.buttonCardContainer}>
+                  <TouchableOpacity
+                    style={[theme.button.editar, theme.card.buttonCard]}
+                    onPress={() => handleEdit(item.idProducto)}
+                  >
+                    <View style={theme.button.buttonContent}>
+                      <MaterialIcons
+                        name="edit"
+                        size={24}
+                        color={COLORS.BLANCO}
+                        style={theme.button.icon}
+                      />
+                    </View>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+          />
+        </ScrollView>
+
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 const styles = StyleSheet.create({

@@ -243,4 +243,27 @@ export const theme = {
     inputContainer: {
         width: '48%', // Deja un pequeño espacio entre inputs
     },
+    container: {
+        ...Platform.select({
+            web: {
+                userSelect: 'none',
+                cursor: 'default',
+            }
+        })
+    },
+    backgroundImage: {
+        flex: 1,
+        width: '100%',
+        height: '100%',
+    }, 
+    logo: {
+        width: 100,
+        height: 100,
+        marginBottom: 20,
+        ...Platform.select({
+            web: {
+                userSelect: 'none'
+            }
+        })
+    },
 };

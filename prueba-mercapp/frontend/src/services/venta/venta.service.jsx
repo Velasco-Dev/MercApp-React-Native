@@ -1,8 +1,8 @@
 import { API_URL, defaultHeaders } from '../config/api';
 
-export const registrarVenta = async (ventaData) => {
+export const crearVenta = async (ventaData) => {
     try {
-        const response = await fetch(`${API_URL}/ventas`, {
+        const response = await fetch(`${API_URL}/venta/registrar-venta`, {
             method: 'POST',
             headers: defaultHeaders,
             body: JSON.stringify(ventaData)
@@ -22,7 +22,7 @@ export const registrarVenta = async (ventaData) => {
 
 export const obtenerVentas = async () => {
     try {
-        const response = await fetch(`${API_URL}/ventas`, {
+        const response = await fetch(`${API_URL}/venta/venta/total`, {
             method: 'GET',
             headers: defaultHeaders,
         });

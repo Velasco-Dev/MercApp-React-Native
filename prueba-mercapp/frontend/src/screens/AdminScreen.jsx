@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, TextInput,
-  StyleSheet, Platform, ScrollView, ActivityIndicator
+  StyleSheet, Platform, ScrollView, ActivityIndicator, KeyboardAvoidingView
 } from 'react-native';
 
 import CustomAlert from '../components/common/CustomAlert';
@@ -115,126 +115,132 @@ export default function AdminScreen() {
 
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Panel de Administración</Text>
 
-      {/* Formulario de usuario */}
-      <View style={theme.form}>
-        <Text style={styles.subtitle}>
-          {isEditing ? 'Editar Usuario' : 'Crear Usuario'}
-        </Text>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1 }}
+    >
+      <View style={[styles.container, theme.container]}>
+        <Text style={styles.title}>Panel de Administración</Text>
 
-        <View style={theme.formRow}>
-          <View style={theme.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Nombre"
-              value={userForm.nombrePersona}
-              onChangeText={(text) => setUserForm({ ...userForm, nombrePersona: text })}
-            />
-          </View>
+        {/* Formulario de usuario */}
+        <View style={theme.form}>
+          <Text style={styles.subtitle}>
+            {isEditing ? 'Editar Usuario' : 'Crear Usuario'}
+          </Text>
 
-          <View style={theme.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Apellido"
-              value={userForm.apellido}
-              onChangeText={(text) => setUserForm({ ...userForm, apellido: text })}
-            />
-          </View>
-        </View>
-
-        <View style={theme.formRow}>
-          <View style={theme.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Edad"
-              value={userForm.edad}
-              onChangeText={(text) => setUserForm({ ...userForm, edad: text })}
-              keyboardType="numeric"
-            />
-          </View>
-
-          <View style={theme.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Identificación"
-              value={userForm.identificacion}
-              onChangeText={(text) => setUserForm({ ...userForm, identificacion: text })}
-              keyboardType="numeric"
-            />
-          </View>
-        </View>
-
-        <View style={theme.formRow}>
-          <View style={theme.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Correo"
-              value={userForm.correo}
-              onChangeText={(text) => setUserForm({ ...userForm, correo: text })}
-              keyboardType="email-address"
-            />
-          </View>
-
-          <View style={theme.inputContainer}>
-            <TouchableOpacity
-              style={theme.button.primary}
-              onPress={isEditing ? () => handleSubmit(selectedUser.idPersona) : handleCreateUser}
-            >
-              <Text style={theme.button.textPrimary}>
-                {isEditing ? 'Actualizar Usuario' : 'Crear Usuario'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-
-      {/* Lista de usuarios */}
-      <View style={styles.listContainer}>
-        <Text style={styles.subtitle}>Usuarios Registrados ({users?.length || 0})</Text>
-        <FlatList
-          data={users || []}
-          style={styles.list}
-          contentContainerStyle={styles.listContent}
-          keyExtractor={(item) => item.idPersona?.toString() || Math.random().toString()}
-          ListEmptyComponent={() => (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>
-                {loading ? 'Cargando...' : 'No hay usuarios registrados'}
-              </Text>
+          <View style={theme.formRow}>
+            <View style={theme.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Nombre"
+                value={userForm.nombrePersona}
+                onChangeText={(text) => setUserForm({ ...userForm, nombrePersona: text })}
+              />
             </View>
-          )}
-          renderItem={({ item }) => (
-            <View style={styles.userCard}>
-              <View style={styles.userInfo}>
-                <Text style={styles.userName}>{item.nombrePersona} {item.apellido}</Text>
-                <Text style={styles.userEmail}>{item.correo}</Text>
-                <Text style={styles.userRole}>Rol: {item.rol}</Text>
-              </View>
-              <View style={styles.actionButtons}>
-                <TouchableOpacity
-                  style={[theme.button.editar, styles.actionButton]}
-                  onPress={() => {
-                    setSelectedUser(item);
-                    setUserForm(item);
-                    setIsEditing(true);
-                  }}
-                >
-                  <MaterialIcons name="edit" size={24} color={COLORS.BLANCO} />
-                </TouchableOpacity>
-              </View>
+
+            <View style={theme.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Apellido"
+                value={userForm.apellido}
+                onChangeText={(text) => setUserForm({ ...userForm, apellido: text })}
+              />
             </View>
-          )}
+          </View>
+
+          <View style={theme.formRow}>
+            <View style={theme.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Edad"
+                value={userForm.edad}
+                onChangeText={(text) => setUserForm({ ...userForm, edad: text })}
+                keyboardType="numeric"
+              />
+            </View>
+
+            <View style={theme.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Identificación"
+                value={userForm.identificacion}
+                onChangeText={(text) => setUserForm({ ...userForm, identificacion: text })}
+                keyboardType="numeric"
+              />
+            </View>
+          </View>
+
+          <View style={theme.formRow}>
+            <View style={theme.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Correo"
+                value={userForm.correo}
+                onChangeText={(text) => setUserForm({ ...userForm, correo: text })}
+                keyboardType="email-address"
+              />
+            </View>
+
+            <View style={theme.inputContainer}>
+              <TouchableOpacity
+                style={theme.button.primary}
+                onPress={isEditing ? () => handleSubmit(selectedUser.idPersona) : handleCreateUser}
+              >
+                <Text style={theme.button.textPrimary}>
+                  {isEditing ? 'Actualizar' : 'Crear'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+
+        {/* Lista de usuarios */}
+        <View style={styles.listContainer}>
+          <Text style={styles.subtitle}>Usuarios Registrados ({users?.length || 0})</Text>
+          <FlatList
+            data={users || []}
+            style={styles.list}
+            contentContainerStyle={styles.listContent}
+            keyExtractor={(item) => item.idPersona?.toString() || Math.random().toString()}
+            ListEmptyComponent={() => (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>
+                  {loading ? 'Cargando...' : 'No hay usuarios registrados'}
+                </Text>
+              </View>
+            )}
+            renderItem={({ item }) => (
+              <View style={styles.userCard}>
+                <View style={styles.userInfo}>
+                  <Text style={styles.userName}>{item.nombrePersona} {item.apellido}</Text>
+                  <Text style={styles.userEmail}>{item.correo}</Text>
+                  <Text style={styles.userRole}>Rol: {item.rol}</Text>
+                </View>
+                <View style={styles.actionButtons}>
+                  <TouchableOpacity
+                    style={[theme.button.editar, styles.actionButton]}
+                    onPress={() => {
+                      setSelectedUser(item);
+                      setUserForm(item);
+                      setIsEditing(true);
+                    }}
+                  >
+                    <MaterialIcons name="edit" size={24} color={COLORS.BLANCO} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+          />
+        </View>
+
+        <CustomAlert
+          visible={alertVisible}
+          message={alertMessage}
+          onClose={() => setAlertVisible(false)}
         />
-      </View>
-
-      <CustomAlert
-        visible={alertVisible}
-        message={alertMessage}
-        onClose={() => setAlertVisible(false)}
-      />
-    </View >
+      </View >
+    </KeyboardAvoidingView>
   );
 }
 

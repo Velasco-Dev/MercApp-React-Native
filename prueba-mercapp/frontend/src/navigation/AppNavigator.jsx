@@ -8,10 +8,13 @@ import MicroScreen from '../screens/MicroScreen';
 import VendedorScreen from '../screens/VendedorScreen';
 import RegistroScreen from '../screens/RegistroScreen';
 
+import HomeScreen from '../screens/HomeScreen';
+
 import BackButton from '../components/common/BackButton';
 import LogoutButton from '../components/common/LogoutButton';
 
 import { useAuth } from '../context/AuthContext';
+import { theme } from '../components/themes/Theme';
 
 const Stack = createStackNavigator();
 
@@ -30,13 +33,11 @@ const authScreenOptions = {
     headerTitleAlign: 'center',
 };
 
-const authenticatedScreenOptions = {
-    headerLeft: null,
-    headerRight: () => <LogoutButton />,
+const ScreenOptions = {
     headerStyle: {
         elevation: 10,
         shadowOpacity: 10,
-        backgroundColor: '#fff',
+        backgroundColor: theme.Colors.BLANCO,
     },
     headerTitleStyle: {
         fontWeight: 'bold',
@@ -62,13 +63,14 @@ export default function AppNavigator() {
             case 'admin': return 'Admin';
             case 'Microempresario': return 'Micro';
             case 'Vendedor': return 'Vendor';
-            case 'usuario': return 'Vendor';
+            case 'usuario': return 'Home';
             default: return 'Login';
         }
     };
 
     return (
-        <Stack.Navigator initialRouteName={getInitialRouteName()}>
+        <Stack.Navigator initialRouteName={getInitialRouteName()}
+            screenOptions={ScreenOptions}>
             {!isAuthenticated ? (
                 <>
                     <Stack.Screen name="Login" component={LoginScreen} options={{ title: 'MercApp - Inicio de Sesión', headerShown: false}} />
@@ -79,7 +81,7 @@ export default function AppNavigator() {
                     {userRole === 'admin' && <Stack.Screen name='Admin' component={AdminScreen} options={{ title: 'Administrador@',  headerRight: () => <LogoutButton />}} />}
                     {userRole === 'Microempresario' && <Stack.Screen name='Micro' component={MicroScreen} options={{ title: 'Microempresari@',  headerRight: () => <LogoutButton /> }} />}
                     {userRole === 'Vendedor' && <Stack.Screen name='Vendor' component={VendedorScreen} options={{ title: 'Vendedor@',  headerRight: () => <LogoutButton /> }} />}
-                    {userRole === 'usuario' && <Stack.Screen name='Vendor' component={VendedorScreen} options={{ title: 'Vendedor@',  headerRight: () => <LogoutButton /> }} />}
+                    {userRole === 'usuario' && <Stack.Screen name='Home' component={HomeScreen} options={{ title: 'Usuari@',  headerRight: () => <LogoutButton /> }} />}
                 </>
             )}
         </Stack.Navigator>

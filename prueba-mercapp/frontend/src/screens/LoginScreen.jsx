@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
     View, Text, TouchableOpacity, StyleSheet, TextInput,
-    ImageBackground, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator
+    ImageBackground, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator,
+    Image, Animated
 } from 'react-native';
 
 import CustomAlert from '../components/common/CustomAlert.jsx';
@@ -31,6 +32,16 @@ export default function LoginScreen({ navigation }) {
         setAlertVisible(true);
     };
 
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true
+        }).start();
+    }, []);
+
     const validateUser = async () => {
 
         // Validar que los campos no estén vacíos
@@ -51,30 +62,20 @@ export default function LoginScreen({ navigation }) {
         setLoading(true);
 
         try {
+
             const response = await loginUsuarioF(userCorreo, userPassword);
             await login(response.token, response.usuario.rol);
-            // Si el usuario existe, navegamos a la pantalla correspondiente
-            // const screenMap = {
-            //     'admin': 'admin',
-            //     'Microempresario': 'Micro',
-            //     'Vendedor': 'Vendor',
-            //     'usuario': 'User' // Agregar esta línea si quieres soporte para usuarios normales
-
-            // };
-
-            // const screenName = screenMap[response.usuario.rol];
-            // if (!screenName) {
-            //     throw new Error('Rol no válido o sin acceso');
-            // }
-
-            // navigation.replace(screenName);
 
         } catch (error) {
+
             console.error('Error al validar usuario:', error);
             showAlert('Error de acceso', error.message || 'Error al validar usuario'); //
             setUserPassword('');
+
         } finally {
+
             setLoading(false);
+            
         }
     };
 
@@ -86,16 +87,24 @@ export default function LoginScreen({ navigation }) {
         >
             <ImageBackground
                 source={require('../../assets/background.webp')} // ajusta la ruta según tu estructura
-                style={styles.backgroundImage}
+                style={theme.backgroundImage}
                 resizeMode="cover"
                 imageStyle={{ opacity: 1 }} // Ajusta la opacidad de la imagen de fondo
             >
-                <ScrollView contentContainerStyle={styles.scrollContainer}
+                <ScrollView contentContainerStyle={[styles.scrollContainer, theme.container]}
                     keyboardShouldPersistTaps="handled"
                     style={{ flex: 1 }}>
 
                     <View style={styles.container}>
                         <View style={styles.loginForm}>
+                            {/* // En el render, envuelve la Image en un Animated.View: */}
+                            <Animated.View style={{ opacity: fadeAnim }}>
+                                <Image
+                                    source={require('../../assets/icon.png')} // ajusta la ruta según tu estructura
+                                    style={theme.logo}
+                                    resizeMode="contain"
+                                />
+                            </Animated.View>
                             <Text style={styles.title}>Iniciar Sesión</Text>
                             <TextInput
                                 autoCapitalize="none"
@@ -147,11 +156,6 @@ export default function LoginScreen({ navigation }) {
 
 const styles = StyleSheet.create({
 
-    backgroundImage: {
-        flex: 1,
-        width: '100%',
-        height: '100%',
-    },
     buttonContainer: {
         width: '100%',
         marginTop: 20,
