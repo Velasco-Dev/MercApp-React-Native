@@ -2,15 +2,23 @@ import { COLORS } from '../../themes/Colors';
 import { theme } from '../../themes/Theme';
 import { useState } from 'react';
 import {
-    Platform, StyleSheet, Modal, View, FlatList,
+    Platform, StyleSheet, Modal, View, FlatList, Picker,
     TouchableOpacity, Text
 } from 'react-native';
 
 import { MaterialIcons } from '@expo/vector-icons';
 
-
 export const ProductModal = ({ visible, onClose, productos, onConfirm }) => {
     const [cart, setCart] = useState([]);
+    const [metodoPagoSeleccionado, setMetodoPagoSeleccionado] = useState('');
+
+
+    const metodoPago = [
+        'Método de Pago',
+        'Efectivo',
+        'Transferencia',
+        'Nequi'
+    ];
 
     const addToCart = (producto) => {
         const existingItem = cart.find(item => item.idProducto === producto.idProducto);
@@ -113,36 +121,52 @@ export const ProductModal = ({ visible, onClose, productos, onConfirm }) => {
                             />
                         </View>
 
-                        {/* Carrito */}
-                        {cart.length > 0 && (
-                            <View style={styles.cartContainer}>
-                                <Text style={styles.cartTitle}>Resumen de Venta</Text>
-                                <FlatList
-                                    data={cart}
-                                    keyExtractor={item => item.idProducto}
-                                    style={styles.cartList}
-                                    renderItem={({item}) => (
-                                        <View key={item.idProducto} style={styles.cartItem}>
-                                            <Text style={styles.cartItemText}>
-                                                {productos.find(p => p.idProducto === item.idProducto)?.nombre}
-                                            </Text>
-                                            <Text style={styles.cartItemDetails}>
-                                                {item.cantidadVendida} x ${item.precioUnitario}
-                                                {item.descuentos > 0 ? ` (-${item.descuentos}%)` : ''}
-                                            </Text>
-                                            <Text style={styles.cartItemSubtotal}>
-                                                Subtotal: ${item.subTotal}
-                                            </Text>
-                                        </View>
-                                    )}
-                                />
-                                <Text style={styles.totalText}>
-                                    Total: ${cart.reduce((sum, item) => sum + item.subTotal, 0).toFixed(2)}
-                                </Text>
+                        <View>
+                            {/* Carrito */}
+                            {cart.length > 0 && (
+                                <View style={styles.cartContainer}>
+                                    <Text style={styles.cartTitle}>Resumen de Venta</Text>
+                                    <FlatList
+                                        data={cart}
+                                        keyExtractor={item => item.idProducto}
+                                        style={styles.cartList}
+                                        renderItem={({ item }) => (
+                                            <View key={item.idProducto} style={styles.cartItem}>
+                                                <Text style={styles.cartItemText}>
+                                                    {productos.find(p => p.idProducto === item.idProducto)?.nombre}
+                                                </Text>
+                                                <Text style={styles.cartItemDetails}>
+                                                    {item.cantidadVendida} x ${item.precioUnitario}
+                                                    {item.descuentos > 0 ? ` (-${item.descuentos}%)` : ''}
+                                                </Text>
+                                                <Text style={styles.cartItemSubtotal}>
+                                                    Subtotal: ${item.subTotal}
+                                                </Text>
+                                            </View>
+                                        )}
+                                    />
+                                    <Text style={styles.totalText}>
+                                        Total: ${cart.reduce((sum, item) => sum + item.subTotal, 0).toFixed(2)}
+                                    </Text>
+                                </View>
+                            )}
+                            <View style={styles.picker}>
+                                <Picker
+                                    selectedValue={productos.metodoPago}
+                                    onValueChange={(itemValue) => setMetodoPagoSeleccionado(itemValue) }
+                                    style={theme.picker}
+                                >
+                                    {metodoPago.map((cat, index) => (
+                                        <Picker.Item
+                                            key={index}
+                                            label={cat}
+                                            value={index === 0 ? '' : cat}
+                                        />
+                                    ))}
+                                </Picker>
                             </View>
-                        )}
+                        </View>
                     </View>
-
                     {/* Botones */}
                     <View style={styles.modalActions}>
                         <TouchableOpacity
@@ -350,16 +374,24 @@ const styles = StyleSheet.create({
     productList: {
         flex: 1,
         maxHeight: Platform.OS === 'web' ? '100%' : '50%',
+        maxWidth: Platform.OS === 'web' ? '70%' : '50%',
     },
     cartContainer: {
-        flex: Platform.OS === 'web' ? 0.4 : 1,
-        marginLeft: Platform.OS === 'web' ? 20 : 0,
-        marginTop: Platform.OS === 'web' ? 0 : 20,
+        flex: Platform.OS === 'web' ? 1 : 1,
+        marginLeft: Platform.OS === 'web' ? 30 : 5,
+        marginTop: Platform.OS === 'web' ? 5 : 20,
         padding: 15,
         backgroundColor: COLORS.BACKGROUND,
         borderRadius: 8,
     },
     cartList: {
-        maxHeight: 200,
+        height: '100%',
+    },
+    picker: {
+       margin: 20,
+       paddingLeft: 30,
+       alignSelf: 'center',
+       alignItems: 'center',
+       alignContent: 'center'
     },
 });

@@ -5,8 +5,12 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+
     const [userRole, setUserRole] = useState(null);
     const [loading, setLoading] = useState(true);
+
+    // const [userId, setUserId] = useState(null);
+
 
     // Verificar token al iniciar
     useEffect(() => {
@@ -17,10 +21,12 @@ export const AuthProvider = ({ children }) => {
         try {
             const token = await AsyncStorage.getItem('userToken');
             const role = await AsyncStorage.getItem('userRole');
+            // const id = await AsyncStorage.getItem('userId');
 
-            if (token && role) {
+            if (token && role ) {//&& id
                 setIsAuthenticated(true);
                 setUserRole(role);
+                // setUserId(id); // ← AÑADIR
             }
         } catch (error) {
 
@@ -35,10 +41,12 @@ export const AuthProvider = ({ children }) => {
     };
 
 
-    const login = async (token, role) => {
+    const login = async (token, role, idPersona) => {
         try {
             await AsyncStorage.setItem('userToken', token);
             await AsyncStorage.setItem('userRole', role);
+            // await AsyncStorage.getItem('userId', idPersona);
+
             setIsAuthenticated(true);
             setUserRole(role);
         } catch (error) {
@@ -64,7 +72,8 @@ export const AuthProvider = ({ children }) => {
         userRole,
         loading,
         login,
-        logout
+        logout,
+        // userId
     };
 
     return (

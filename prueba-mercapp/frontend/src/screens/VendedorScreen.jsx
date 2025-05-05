@@ -12,6 +12,8 @@ import { useProductos } from '../services/hooks/producto.hooks';
 
 import { ProductModal } from '../components/common/modals/ProductModal';
 
+import { useAuth } from '../context/AuthContext';
+
 export default function VendorScreen() {
 
     // Estados y hooks
@@ -20,10 +22,18 @@ export default function VendorScreen() {
 
     const [cart, setCart] = useState([]);
 
+    const [metodoPagoSeleccionado, setMetodoPagoSeleccionado] = useState('');
+
+
     const [modalVisible, setModalVisible] = useState(false);
 
     const [alertVisible, setAlertVisible] = useState(false);
     const [alertMessage, setAlertMessage] = useState('');
+
+    const { userId } = useAuth();
+
+    console.log(userId);
+    
 
     // Cargar datos iniciales
     useEffect(() => {
@@ -35,18 +45,33 @@ export default function VendorScreen() {
         if (!cartItems || cartItems.length === 0) return;
     
         try {
+            // const ventaData = {
+            //     items: cartItems.map(item => ({
+            //         idProducto: item.idProducto,
+            //         cantidadVendida: item.cantidadVendida,
+            //         precioUnitario: item.precioUnitario,
+            //         descuentos: item.descuentos || 0,
+            //         nombre: item.nombre // si necesitas el nombre para mostrar
+            //     })),
+            //     total: cartItems.reduce((sum, item) => sum + item.subTotal, 0),
+            //     fecha: new Date().toISOString(),
+            //     estado: true
+            // };
             const ventaData = {
-                items: cartItems.map(item => ({
-                    idProducto: item.idProducto,
-                    cantidadVendida: item.cantidadVendida,
-                    precioUnitario: item.precioUnitario,
-                    descuentos: item.descuentos || 0,
-                    nombre: item.nombre // si necesitas el nombre para mostrar
+                fechaVenta: new Date().toISOString(),
+                metodoPago: {
+                  nombreMetodoPago: metodoPagoSeleccionado, // ← lo seleccionas desde la UI
+                  fechaEmisionResumen: new Date().toISOString()
+                },
+                productos: cartItems.map(item => ({
+                  idProducto: item.idProducto,
+                  cantidadVendida: item.cantidadVendida,
+                  precioUnitario: item.precioUnitario,
+                  descuentos: item.descuentos || 0
                 })),
-                total: cartItems.reduce((sum, item) => sum + item.subTotal, 0),
-                fecha: new Date().toISOString(),
-                estado: true
-            };
+                vendedor: userId // ← este valor debe venir del contexto o sesión del usuario
+              };
+              
     
             const success = await registrarVenta(ventaData);
             
