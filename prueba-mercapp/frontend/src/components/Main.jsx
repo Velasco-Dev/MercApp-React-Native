@@ -9,19 +9,10 @@ const Main = () => {
     return (
         <AuthProvider>
             <NavigationContainer>
-                <AppNavigator />
+                <AppNavigator/>
             </NavigationContainer>
         </AuthProvider>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        backgroundColor: '#111fff'
-    },
-    text: {
-        color: '#fff',
-    },
-});
 
 export default Main;

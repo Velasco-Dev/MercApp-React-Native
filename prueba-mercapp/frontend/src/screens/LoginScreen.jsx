@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
-    View, Text, FlatList, TouchableOpacity, StyleSheet, TextInput,
-    Button, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator
+    View, Text, TouchableOpacity, StyleSheet, TextInput,
+    ImageBackground, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator
 } from 'react-native';
 
 import CustomAlert from '../components/common/CustomAlert.jsx';
@@ -9,6 +9,8 @@ import CustomAlert from '../components/common/CustomAlert.jsx';
 import { loginUsuarioF } from '../services/auth/auth.service.jsx';
 
 import { useAuth } from '../context/AuthContext';
+import { theme } from '../components/themes/Theme.jsx';
+import { COLORS } from '../components/themes/Colors.jsx';
 
 export default function LoginScreen({ navigation }) {
 
@@ -45,28 +47,27 @@ export default function LoginScreen({ navigation }) {
         }
 
         console.log('Intentando login con:', userCorreo, userPassword);
-        
+
         setLoading(true);
 
         try {
             const response = await loginUsuarioF(userCorreo, userPassword);
             await login(response.token, response.usuario.rol);
             // Si el usuario existe, navegamos a la pantalla correspondiente
-            const screenMap = {
-                'admin': 'admin',
-                'Microempresario': 'Micro',
-                'Vendedor': 'Vendor',
-                'usuario': 'User' // Agregar esta línea si quieres soporte para usuarios normales
+            // const screenMap = {
+            //     'admin': 'admin',
+            //     'Microempresario': 'Micro',
+            //     'Vendedor': 'Vendor',
+            //     'usuario': 'User' // Agregar esta línea si quieres soporte para usuarios normales
 
-            };
+            // };
 
-            const screenName = screenMap[response.usuario.rol];
-            if (!screenName) {
-                throw new Error('Rol no válido o sin acceso');
-            }
-
-            //navigation.replace(screenName);
             // const screenName = screenMap[response.usuario.rol];
+            // if (!screenName) {
+            //     throw new Error('Rol no válido o sin acceso');
+            // }
+
+            // navigation.replace(screenName);
 
         } catch (error) {
             console.error('Error al validar usuario:', error);
@@ -83,61 +84,74 @@ export default function LoginScreen({ navigation }) {
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             style={{ flex: 1 }}
         >
-            <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
-                <View style={styles.container}>
-                    <View style={styles.loginForm}>
-                        <Text style={styles.title}>Iniciar Sesión</Text>
-                        <TextInput
-                            autoCapitalize="none"
-                            placeholder="Correo"
-                            value={userCorreo}
-                            onChangeText={setCorreo}
-                            keyboardType="email-address"
-                            style={styles.input}
-                            editable={!loading}
-                        />
-                        <TextInput
-                            secureTextEntry
-                            autoCapitalize="none"
-                            placeholder="Contraseña"
-                            value={userPassword}
-                            onChangeText={setUserPassword}
-                            style={styles.input}
-                            editable={!loading}
-                        />
-                        {loading ? (
-                            <ActivityIndicator size="large" color="#0000ff" />
-                        ) : (
-                            <>
-                                <TouchableOpacity
-                                    style={styles.loginButton}
-                                    onPress={validateUser}>
-                                    <Text style={styles.buttonText}>Ingresar</Text>
-                                </TouchableOpacity>
+            <ImageBackground
+                source={require('../../assets/background.webp')} // ajusta la ruta según tu estructura
+                style={styles.backgroundImage}
+                resizeMode="cover"
+                imageStyle={{ opacity: 1 }} // Ajusta la opacidad de la imagen de fondo
+            >
+                <ScrollView contentContainerStyle={styles.scrollContainer}
+                    keyboardShouldPersistTaps="handled"
+                    style={{ flex: 1 }}>
 
-                                <TouchableOpacity
-                                    style={styles.registerButton}
-                                    onPress={() => navigation.navigate('Registro')}>
-                                    <Text style={styles.registerButtonText}>¿No tienes una cuenta? Regístrate</Text>
-                                </TouchableOpacity>
-                            </>
-                        )}
+                    <View style={styles.container}>
+                        <View style={styles.loginForm}>
+                            <Text style={styles.title}>Iniciar Sesión</Text>
+                            <TextInput
+                                autoCapitalize="none"
+                                placeholder="Correo"
+                                value={userCorreo}
+                                onChangeText={setCorreo}
+                                keyboardType="email-address"
+                                style={styles.input}
+                                editable={!loading}
+                            />
+                            <TextInput
+                                secureTextEntry
+                                autoCapitalize="none"
+                                placeholder="Contraseña"
+                                value={userPassword}
+                                onChangeText={setUserPassword}
+                                style={styles.input}
+                                editable={!loading}
+                            />
+                            {loading ? (
+                                <ActivityIndicator size="large" color={COLORS.SECONDARY} />
+                            ) : (
+                                <>
+                                    <TouchableOpacity
+                                        style={theme.button.primary}
+                                        onPress={validateUser}>
+                                        <Text style={theme.button.textPrimary}>Ingresar</Text>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity
+                                        onPress={() => navigation.navigate('Registro')}>
+                                        <Text style={theme.button.registerButtonText}>¿No tienes una cuenta? Regístrate</Text>
+                                    </TouchableOpacity>
+                                </>
+                            )}
+                        </View>
+                        <CustomAlert
+                            visible={alertVisible}
+                            title={alertTitle}
+                            message={alertMessage}
+                            onClose={() => setAlertVisible(false)}
+                        />
                     </View>
-                    <CustomAlert
-                        visible={alertVisible}
-                        title={alertTitle}
-                        message={alertMessage}
-                        onClose={() => setAlertVisible(false)}
-                    />
-                </View>
-            </ScrollView>
+                </ScrollView>
+            </ImageBackground>
         </KeyboardAvoidingView>
     );
 }
 
 const styles = StyleSheet.create({
 
-
+    backgroundImage: {
+        flex: 1,
+        width: '100%',
+        height: '100%',
+    },
     buttonContainer: {
         width: '100%',
         marginTop: 20,
@@ -147,19 +161,45 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-start',
     },
     container: {
+        backgroundColor: 'rgba(255, 255, 255, 0.63)',
         flex: 1,
         justifyContent: 'center',
         padding: 40,
-        backgroundColor: '#fff',
+        alignItems: 'center',
     },
     loginForm: {
-        width: '100%',
+        ...Platform.select({
+            web: {
+                width: '40%', // Más pequeño en web
+                maxWidth: 400, // Tamaño máximo para pantallas grandes
+                minWidth: 300, // Tamaño mínimo para que sea usable
+            },
+            default: {
+                width: '100%', // Mantiene el 100% en móvil
+            }
+        }),
         alignItems: 'center',
         borderRadius: 10,
         borderColor: '#ddd',
         borderWidth: 2,
         padding: 20,
-        boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+        backgroundColor: COLORS.BLANCO,
+        // Reemplaza boxShadow (que no funciona en React Native) por:
+        ...Platform.select({
+            web: {
+                boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+            },
+            default: {
+                shadowColor: "#000",
+                shadowOffset: {
+                    width: 0,
+                    height: 2,
+                },
+                shadowOpacity: 0.25,
+                shadowRadius: 3.84,
+                elevation: 5,
+            }
+        }),
     },
     title: {
         fontSize: 24,
@@ -175,7 +215,7 @@ const styles = StyleSheet.create({
         width: '100%'
     },
     loginButton: {
-        backgroundColor: '#4CAF50', // Verde material design
+        backgroundColor: theme.Colors.PRIMARY,
         padding: 15,
         borderRadius: 10,
         width: '40%',
@@ -191,7 +231,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     registerButtonText: {
-        color: '#4CAF50',
+        color: theme.Colors.PRIMARY,
         textAlign: 'center',
         fontSize: 14,
         textDecorationLine: 'underline',

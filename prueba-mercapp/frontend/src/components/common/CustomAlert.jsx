@@ -18,7 +18,7 @@ export default function CustomAlert({ visible, title, message, onClose, onConfir
                             style={[styles.button, styles.cancelButton]}
                             onPress={onClose}
                         >
-                            <Text style={styles.buttonText}>Cancelar</Text>
+                            <Text style={styles.buttonText}>Cerrar</Text>
                         </TouchableOpacity>
                         {showConfirm && (
                             <TouchableOpacity

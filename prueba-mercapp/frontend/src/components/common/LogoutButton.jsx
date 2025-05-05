@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
 import { useAuth } from '../../context/AuthContext';
 import { cerrarSesionF } from '../../services/auth/auth.service';
 
 import CustomAlert from './CustomAlert';
+import { theme } from '../themes/Theme';
+import { COLORS } from '../themes/Colors';
+
+import { MaterialIcons } from '@expo/vector-icons';
 
 const LogoutButton = () => {
     const navigation = useNavigation();
@@ -30,10 +34,17 @@ const LogoutButton = () => {
     return (
         <>
             <TouchableOpacity
-                style={styles.headerButton}
+                style={theme.button.logout}
                 onPress={handleLogout}
             >
-                <Text style={styles.headerButtonText}>Cerrar Sesión</Text>
+                <View style={theme.button.buttonContent}>
+                    <MaterialIcons 
+                        name="logout" 
+                        size={24} 
+                        color={COLORS.BLANCO} 
+                        style={theme.button.icon}
+                    />
+                </View>
             </TouchableOpacity>
 
             <CustomAlert
@@ -47,16 +58,5 @@ const LogoutButton = () => {
         </>
     );
 };
-
-const styles = StyleSheet.create({
-    headerButton: {
-        marginRight: 15,
-        padding: 8,
-    },
-    headerButtonText: {
-        fontSize: 16,
-        color: '#FF0000',
-    }
-});
 
 export default LogoutButton;

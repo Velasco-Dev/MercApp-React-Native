@@ -59,9 +59,10 @@ export default function AppNavigator() {
     const getInitialRouteName = () => {
         if (!isAuthenticated) return 'Login';
         switch (userRole) {
-            case 'administrador': return 'Admin';
-            case 'microempresario': return 'Micro';
-            case 'vendedor': return 'Vendor';
+            case 'admin': return 'Admin';
+            case 'Microempresario': return 'Micro';
+            case 'Vendedor': return 'Vendor';
+            case 'usuario': return 'Vendor';
             default: return 'Login';
         }
     };
@@ -75,9 +76,9 @@ export default function AppNavigator() {
                 </>
             ) : (
                 <>
-                    {userRole === 'administrador' && <Stack.Screen name='Admin' component={AdminScreen} options={{ title: 'Administrador@',  headerRight: () => <LogoutButton />}} />}
-                    {userRole === 'microempresario' && <Stack.Screen name='Micro' component={MicroScreen} options={{ title: 'Microempresari@',  headerRight: () => <LogoutButton /> }} />}
-                    {userRole === 'vendedor' && <Stack.Screen name='Vendor' component={VendedorScreen} options={{ title: 'Vendedor@',  headerRight: () => <LogoutButton /> }} />}
+                    {userRole === 'admin' && <Stack.Screen name='Admin' component={AdminScreen} options={{ title: 'Administrador@',  headerRight: () => <LogoutButton />}} />}
+                    {userRole === 'Microempresario' && <Stack.Screen name='Micro' component={MicroScreen} options={{ title: 'Microempresari@',  headerRight: () => <LogoutButton /> }} />}
+                    {userRole === 'Vendedor' && <Stack.Screen name='Vendor' component={VendedorScreen} options={{ title: 'Vendedor@',  headerRight: () => <LogoutButton /> }} />}
                     {userRole === 'usuario' && <Stack.Screen name='Vendor' component={VendedorScreen} options={{ title: 'Vendedor@',  headerRight: () => <LogoutButton /> }} />}
                 </>
             )}

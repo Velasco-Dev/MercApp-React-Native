@@ -10,8 +10,8 @@ export const loginUsuarioF = async (correo, password) => {
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Error en la autenticación');
+            const dataError = await response.json();
+            throw new Error(dataError.message || 'Inicio Fallido', response.status);
         }
 
         return response.json();
@@ -30,8 +30,8 @@ export const cerrarSesionF = async () => {
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Error en la autenticación');
+            const dataError = await response.json();
+            throw new Error(dataError.message || 'Cierre Fallido', response.status);
         }
 
         return response.json();
@@ -60,8 +60,8 @@ export const registrarUsuarioF = async (userData) => {
         });
 
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Error al registrar usuario');
+            const dataError = await response.json();
+            throw new Error(dataError.message || 'Creación fallida', response.status);
         }
 
         return await response.json();

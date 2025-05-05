@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import {
-    View, Text, FlatList, TouchableOpacity, StyleSheet, TextInput, Button, ScrollView,
-    KeyboardAvoidingView, Platform, ActivityIndicator
+    View, Text, StyleSheet, TextInput, ScrollView,
+    KeyboardAvoidingView, Platform, ActivityIndicator, TouchableOpacity
 } from 'react-native';
 import CustomAlert from '../components/common/CustomAlert.jsx';
 
 import { registrarUsuarioF } from '../services/auth/auth.service';
+
+import { COLORS } from '../components/themes/Colors.jsx';
+import { theme } from '../components/themes/Theme.jsx';
 
 export default function RegistroScreen({ navigation }) {
 
@@ -13,7 +16,7 @@ export default function RegistroScreen({ navigation }) {
         nombrePersona: '',
         apellido: '',
         edad: '',
-        identificacion: 0,
+        identificacion: '',
         correo: '',
         password: '',
         rol: 'usuario'
@@ -99,10 +102,10 @@ export default function RegistroScreen({ navigation }) {
         try {
             const response = await registrarUsuarioF(formData);
             //Navegamos a la pantalla correspondiente
+            console.log('Respuesta del registro:', response);
 
-            if (response.status === 'success') {
+            if (response) {
                 showAlert('Registro de usuario', response.message || 'Usuario registrado con éxito');
-                navigation.replace('Login');
                 // Limpiamos los campos
                 setFormData('');
             }
@@ -143,7 +146,10 @@ export default function RegistroScreen({ navigation }) {
                         <TextInput
                             placeholder="Edad"
                             value={formData.edad}
-                            onChangeText={(text) => setFormData({ ...formData, edad: text })}
+                            onChangeText={(text) => {
+                                const numeric = text.replace(/[^0-9]/g, ''); // Solo permitir números
+                                setFormData({ ...formData, edad: numeric })
+                            }}
                             keyboardType="numeric"
                             style={styles.input}
                             editable={!loading}
@@ -188,19 +194,27 @@ export default function RegistroScreen({ navigation }) {
                             <Text style={styles.errorText}>{passwordError}</Text>
                         ) : null}
                         {loading ? (
-                            <ActivityIndicator size="large" color="#0000ff" />
+                            <ActivityIndicator size="large" color={COLORS.SECONDARY} />
                         ) : (
-                            <Button
-                                title="Ingresar"
-                                onPress={handleRegistro}
-                            />
+                            <TouchableOpacity
+                                style={theme.button.primary}
+                                onPress={handleRegistro}>
+                                <Text style={theme.button.textPrimary}>Registrarse</Text>
+                            </TouchableOpacity>
+
                         )}
                     </View>
                     <CustomAlert
                         visible={alertVisible}
                         title={alertTitle}
                         message={alertMessage}
-                        onClose={() => setAlertVisible(false)}
+                        onClose={() => {
+                            setAlertVisible(false)
+                            // Si el título es "Registro de usuario" significa que fue exitoso
+                            if (alertTitle === 'Registro de usuario') {
+                                navigation.replace('Login');
+                            }
+                        }}
                     />
                 </View>
             </ScrollView>
@@ -211,10 +225,10 @@ export default function RegistroScreen({ navigation }) {
 const styles = StyleSheet.create({
 
     inputError: {
-        borderColor: 'red',
+        borderColor: COLORS.ERROR,
     },
     errorText: {
-        color: 'red',
+        color: COLORS.ERROR,
         fontSize: 12,
         marginTop: -5,
         marginBottom: 5,
@@ -231,17 +245,43 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         justifyContent: 'center',
+        alignItems: 'center',
         padding: 40,
         backgroundColor: '#fff',
     },
     registerForm: {
-        width: '100%',
+        ...Platform.select({
+            web: {
+                width: '40%', // Más pequeño en web
+                maxWidth: 400, // Tamaño máximo para pantallas grandes
+                minWidth: 300, // Tamaño mínimo para que sea usable
+            },
+            default: {
+                width: '100%', // Mantiene el 100% en móvil
+            }
+        }),
         alignItems: 'center',
         borderRadius: 10,
         borderColor: '#ddd',
         borderWidth: 2,
         padding: 20,
-        boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+        backgroundColor: COLORS.BLANCO,
+        // Reemplaza boxShadow (que no funciona en React Native) por:
+        ...Platform.select({
+            web: {
+                boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+            },
+            default: {
+                shadowColor: "#000",
+                shadowOffset: {
+                    width: 0,
+                    height: 2,
+                },
+                shadowOpacity: 0.25,
+                shadowRadius: 3.84,
+                elevation: 5,
+            }
+        }),
     },
     title: {
         fontSize: 24,

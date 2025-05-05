@@ -44,13 +44,13 @@ app.use("/api/inventario", inventarioRouter); // Rutas de inventario
 connectDB();
 
 
-app.use((req, res, next) => {
-  console.log('Request Origin:', req.headers.origin);
-  console.log('Request Method:', req.method);
-  console.log('Request Headers:', req.headers);
-  console.log('Request Body:', req.body);
-  next();
-});
+// app.use((req, res, next) => {
+//   console.log('Request Origin:', req.headers.origin);
+//   console.log('Request Method:', req.method);
+//   console.log('Request Headers:', req.headers);
+//   console.log('Request Body:', req.body);
+//   next();
+// });
 
 // Iniciar servidor
 // app.listen(PORT, () => {
