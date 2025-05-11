@@ -1,21 +1,27 @@
 {
   "expo": {
-    "name": "prueba-mercapp",
+    "name": "MercApp",
     "slug": "prueba-mercapp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "assetBundlePatterns": [
+      "assets/*"
+    ],
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "ios": {
-      "supportsTablet": true
+    "extra": {
+      "eas": {
+        "projectId": "d5eb6a40-d3c1-4369-9f07-b184de66c119"
+      }
     },
     "android": {
+      "package": "com.velascodev.pruebamercapp",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -23,6 +29,10 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.velascodev.pruebamercapp"
     }
   }
 }
