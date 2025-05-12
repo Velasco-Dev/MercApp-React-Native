@@ -9,12 +9,13 @@ export const loginUsuarioF = async (correo, password) => {
             body: JSON.stringify({ correo, password })
         });
 
-        if (!response.ok) {
-            const dataError = await response.json();
-            throw new Error(dataError.message || 'Inicio Fallido', response.status);
-        }
+        // if (!response.ok) {
+        //     const dataError = await response.json();
+        //     throw new Error(dataError.message || 'Inicio Fallido', response.status);
+        // }
+        return handleResponse(response);
 
-        return response.json();
+        // return response.json();
     } catch (error) {
         console.error('Error en loginUsuarioF:', error);
         throw error;
@@ -29,12 +30,13 @@ export const cerrarSesionF = async () => {
             credentials: 'include'
         });
 
-        if (!response.ok) {
-            const dataError = await response.json();
-            throw new Error(dataError.message || 'Cierre Fallido', response.status);
-        }
+        // if (!response.ok) {
+        //     const dataError = await response.json();
+        //     throw new Error(dataError.message || 'Cierre Fallido', response.status);
+        // }
 
-        return response.json();
+        // return response.json();
+        return handleResponse(response);
     } catch (error) {
         console.error('Error en logoutUsuarioF:', error);
         throw error;
@@ -59,13 +61,16 @@ export const registrarUsuarioF = async (userData) => {
             })
         });
 
-        if (!response.ok) {
-            const dataError = await response.json();
-            throw new Error(dataError.message || 'Creación fallida', response.status);
-        }
+        // if (!response.ok) {
+        //     const dataError = await response.json();
+        //     throw new Error(dataError.message || 'Creación fallida', response.status);
+        // }
 
-        return await response.json();
+        // return await response.json();
+        return handleResponse(response);
     } catch (error) {
-        throw new Error(error.message || 'Error de conexión con el servidor');
+        // throw new Error(error.message || 'Error de conexión con el servidor');
+        console.error('Error en registrarUsuarioF:', error);
+        throw error;
     }
 };
