@@ -7,25 +7,26 @@ import {
 } from '../administrador/administrador.service';
 
 export const useUsuarios = () => {
-    const [users, setUsers] = useState([]);
+    const [usuarios, setUsers] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const fetchUsers = async () => {
+    const fetchUsers = useCallback(async () => {
         try {
             setLoading(true);
-            const response = await obtenerUsuarios();
-            console.log('Datos recibidos:', response);
-            
-            // Extraer el array de usuarios de la respuesta
-            const userData = response.usuarios;
-            
-            if (!userData || !Array.isArray(userData)) {
-                throw new Error('Formato de datos inválido');
-            }
-
-            setUsers(userData);
+            const data = await obtenerUsuarios();
+            // console.log('Datos recibidos:', data);
+            setUsers(data);
             setError(null);
+            // Extraer el array de usuarios de la respuesta
+            // const userData = response.usuarios;
+            
+            // if (!userData || !Array.isArray(userData)) {
+            //     throw new Error('Formato de datos inválido');
+            // }
+
+            // setUsers(userData);
+            // setError(null);
         } catch (err) {
             console.error('Error en fetchUsers:', err);
             setError(err.message);
@@ -33,7 +34,7 @@ export const useUsuarios = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
         fetchUsers();
@@ -85,7 +86,7 @@ export const useUsuarios = () => {
     }, [fetchUsers]);
 
     return {
-        users,
+        usuarios,
         loading,
         error,
         fetchUsers,

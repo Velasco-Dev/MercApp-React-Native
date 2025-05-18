@@ -1,10 +1,15 @@
-import { API_URL, defaultHeaders } from '../config/api';
+import { API_URL, defaultHeaders, getAuthHeaders } from '../config/api';
+
 
 export const obtenerUsuarios = async () => {
+    
+    const headers = await getAuthHeaders();
+
     try {
-        const response = await fetch(`${API_URL}/admin/users`, {
+        const response = await fetch(`${API_URL}/admin/usuarios`, {
             method: 'GET',
-            headers: defaultHeaders,
+            headers: headers,
+            credentials: 'include'
         });
 
         if (!response.ok) {
@@ -12,7 +17,6 @@ export const obtenerUsuarios = async () => {
         }
 
         const data = await response.json();
-        console.log('Response from API:', data); // Debug
         return data;
 
     } catch (error) {
@@ -22,10 +26,14 @@ export const obtenerUsuarios = async () => {
 };
 
 export const crearUsuario = async (userData) => {
+
+    const headers = await getAuthHeaders();
+    
     try {
-        const response = await fetch(`${API_URL}/admin/register-users`, {
+        const response = await fetch(`${API_URL}/admin/register`, {
             method: 'POST',
-            headers: defaultHeaders,
+            headers: headers,
+            credentials: 'include',
             body: JSON.stringify(userData)
         });
 
@@ -40,10 +48,14 @@ export const crearUsuario = async (userData) => {
 };
 
 export const actualizarUsuario = async (userId, userData) => {
+
+    const headers = await getAuthHeaders();
+
     try {
-        const response = await fetch(`${API_URL}/admin/get-user/${userId}`, {
+        const response = await fetch(`${API_URL}/admin/update/${userId}`, {
             method: 'PUT',
-            headers: defaultHeaders,
+            headers: headers,
+            credentials: 'include',
             body: JSON.stringify(userData)
         });
 
@@ -58,10 +70,15 @@ export const actualizarUsuario = async (userId, userData) => {
 };
 
 export const eliminarUsuario = async (userId) => {
+
+    const headers = await getAuthHeaders();
+
+
     try {
         const response = await fetch(`${API_URL}/usuarios/${userId}`, {
             method: 'DELETE',
-            headers: defaultHeaders,
+            headers: headers,
+            credentials: 'include'
         });
 
         if (!response.ok) {

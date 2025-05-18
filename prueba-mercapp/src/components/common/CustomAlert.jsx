@@ -1,37 +1,70 @@
 import React from 'react';
-import { View, Text, Modal, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, Modal, ActivityIndicator, TouchableOpacity, StyleSheet } from 'react-native';
+import { COLORS } from '../themes/Colors';
+import { theme } from '../themes/Theme';
 
-export default function CustomAlert({ visible, title, message, onClose, onConfirm = null, showConfirm = false }) {
+import { MaterialIcons } from '@expo/vector-icons';
+
+
+const CustomAlert = ({ status, visible, title, message, onClose, onConfirm = null, showConfirm = false }) => {
+
+    const getStatusContent = () => {
+        switch (status) {
+            case 'loading':
+                return <ActivityIndicator size="large" color={COLORS.PRIMARY} />;
+            case 'success':
+                return (
+                    <>
+                        <MaterialIcons name="check-circle" size={64} color={COLORS.SUCCESS} />
+                    </>
+                );
+            case 'error':
+                return (
+                    <>
+                        <MaterialIcons name="error-outline" size={64} color={COLORS.ERROR} />
+                    </>
+                );
+            default:
+                return null;
+        }
+    };
+
     return (
         <Modal
             transparent={true}
-            visible={visible}
             animationType="slide"
+            visible={visible}
             onRequestClose={onClose}
         >
             <View style={styles.centeredView}>
                 <View style={styles.alertView}>
-                    <Text style={styles.title}>{title}</Text>
-                    <Text style={styles.message}>{message}</Text>
-                    <View style={styles.buttonContainer}>
-                        <TouchableOpacity
-                            style={[styles.button, styles.cancelButton]}
-                            onPress={onClose}
-                        >
-                            <Text style={styles.buttonText}>Cerrar</Text>
-                        </TouchableOpacity>
-                        {showConfirm && (
+
+                    {getStatusContent()}
+                    {title ? <Text style={styles.title}>{title}</Text> : null}
+                    {message ? <Text style={styles.message}>{message}</Text> : null}
+                    {status !== 'loading' && (
+                        <View style={styles.buttonContainer}>
                             <TouchableOpacity
-                                style={[styles.button, styles.confirmButton]}
-                                onPress={() => {
-                                    onConfirm();
-                                    onClose();
-                                }}
+                                style={[styles.button, styles.cancelButton]}
+                                onPress={onClose}
                             >
-                                <Text style={styles.buttonText}>Confirmar</Text>
+                                <Text style={styles.buttonText}>Cerrar</Text>
                             </TouchableOpacity>
-                        )}
-                    </View>
+                            {showConfirm && (
+                                <TouchableOpacity
+                                    style={[styles.button, styles.confirmButton]}
+                                    onPress={() => {
+                                        onConfirm?.();
+                                        onClose();
+                                    }}
+                                >
+                                    <Text style={styles.buttonText}>Confirmar</Text>
+                                </TouchableOpacity>
+
+                            )}
+                        </View>
+                    )}
+
                 </View>
             </View>
         </Modal>
@@ -39,7 +72,7 @@ export default function CustomAlert({ visible, title, message, onClose, onConfir
 }
 
 const styles = StyleSheet.create({
-    
+
     alertView: {
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
@@ -98,3 +131,5 @@ const styles = StyleSheet.create({
         width: '100%'
     },
 });
+
+export default CustomAlert;

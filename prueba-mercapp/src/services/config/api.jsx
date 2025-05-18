@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Función para obtener la URL base de la API según la plataforma
 const getApiUrl = () => {
@@ -15,38 +16,51 @@ export const API_URL = 'https://backendmercaapp.onrender.com/api';
 
 export const defaultHeaders = {
     'Content-Type': 'application/json',
+    'Access-Control-Allow-Credentials': 'true',
     'Accept': 'application/json'
+};
+
+export const getAuthHeaders = async () => {
+
+    const token = await AsyncStorage.getItem('userToken');
+
+    return {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Credentials': 'true',
+        'Accept': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+    };
 };
 
 export const handleResponse = async (response) => {
     const data = await response.json();
-    
+
     if (!response.ok) {
         const error = {
             status: response.status,
-            message: data.message || 'Error en la petición',
+            message: data.message ,//|| 'Error en la petición'
             details: data.error || null
         };
-        
+
         // Manejar diferentes códigos de estado
-        switch (response.status) {
-            case 401:
-                error.message = 'No autorizado. Por favor, inicie sesión.';
-                break;
-            case 403:
-                error.message = 'Acceso denegado.';
-                break;
-            case 404:
-                error.message = 'Recurso no encontrado.';
-                break;
-            case 500:
-                error.message = 'Error interno del servidor.';
-                break;
-        }
-        
+        // switch (response.status) {
+        //     case 401:
+        //         error.message = 'No autorizado. Por favor, inicie sesión.';
+        //         break;
+        //     case 403:
+        //         error.message = 'Acceso denegado.';
+        //         break;
+        //     case 404:
+        //         error.message = 'Recurso no encontrado.';
+        //         break;
+        //     case 500:
+        //         error.message = 'Error interno del servidor.';
+        //         break;
+        // }
+
         throw error;
     }
-    
+
     return data;
 };
 

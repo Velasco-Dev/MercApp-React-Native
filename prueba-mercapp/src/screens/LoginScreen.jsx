@@ -5,6 +5,8 @@ import {
     Image, Animated
 } from 'react-native';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import CustomAlert from '../components/common/CustomAlert.jsx';
 
 import { loginUsuarioF } from '../services/auth/auth.service.jsx';
@@ -62,20 +64,32 @@ export default function LoginScreen({ navigation }) {
         setLoading(true);
 
         try {
-
             const response = await loginUsuarioF(userCorreo, userPassword);
-            await login(response.token, response.usuario.rol);
 
+            // Verifica que la respuesta tenga la estructura correcta
+            if (response && response.success) {
+                await login(
+                    // response.token,
+                    response.data.rol,
+                    response.data.idPersona
+                );
+
+                console.log('Login exitoso:', response.data.idPersona);
+                console.log('Async userToken exitoso:', AsyncStorage.getItem('userToken'));
+
+            } else {
+                throw new Error('Respuesta del servidor inválida');
+            }
         } catch (error) {
 
             console.error('Error al validar usuario:', error);
-            showAlert('Error de acceso', error.message || 'Error al validar usuario'); //
+            showAlert('Error de acceso', error.message || 'Error al validar usuario');
             setUserPassword('');
 
         } finally {
 
             setLoading(false);
-            
+
         }
     };
 

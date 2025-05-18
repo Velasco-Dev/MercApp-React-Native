@@ -32,7 +32,7 @@ export default function VendorScreen() {
 
     const { userId } = useAuth();
 
-    console.log(userId);
+    // console.log(userId);
     
 
     // Cargar datos iniciales
@@ -70,7 +70,7 @@ export default function VendorScreen() {
                   descuentos: item.descuentos || 0
                 })),
                 idVenta: '01',
-                vendedor: 'USER000023' // ← este valor debe venir del contexto o sesión del usuario
+                vendedor: userId // ← este valor debe venir del contexto o sesión del usuario
               };
               
     

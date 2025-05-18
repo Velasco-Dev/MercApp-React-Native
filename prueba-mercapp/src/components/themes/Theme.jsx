@@ -25,6 +25,10 @@ export const theme = {
             fontSize: 16,
             color: '#2c3e50',
         },
+        body2: {
+            fontSize: 12,
+            color: '#2c3e50',
+        },
         button: {
             fontSize: 18,
             fontWeight: '600',
@@ -255,7 +259,7 @@ export const theme = {
         flex: 1,
         width: '100%',
         height: '100%',
-    }, 
+    },
     logo: {
         width: 100,
         height: 100,
@@ -266,4 +270,19 @@ export const theme = {
             }
         })
     },
+    emptyContainer: {
+        padding: 20,
+        alignItems: 'center'
+    },
+    emptyText: {
+        color: COLORS.SECONDARY,
+        fontSize: 16
+    },
+  subtitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginVertical: 10,
+    color: COLORS.TEXT,
+    alignSelf: 'center'
+  },
 };

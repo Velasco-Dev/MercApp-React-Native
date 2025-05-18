@@ -7,11 +7,13 @@ import { AuthProvider } from '../context/AuthContext';
 
 const Main = () => {
     return (
-        <AuthProvider>
-            <NavigationContainer>
-                <AppNavigator/>
-            </NavigationContainer>
-        </AuthProvider>
+        <View style={{ flex: 1 }}>
+            <AuthProvider>
+                <NavigationContainer>
+                    <AppNavigator />
+                </NavigationContainer>
+            </AuthProvider>
+        </View>
     );
 }
 

@@ -14,8 +14,8 @@ import { COLORS } from '../components/themes/Colors';
 import { MaterialIcons } from '@expo/vector-icons';
 export default function AdminScreen() {
 
-  // "correo": "jose.jose@ejemplo.com",
-  // "password": "admin123"
+  // "correo": "jose@gmail.com",
+  // "password": "12345678"
 
   const [selectedUser, setSelectedUser] = useState(null);
 
@@ -23,8 +23,18 @@ export default function AdminScreen() {
   const [alertMessage, setAlertMessage] = useState('');
   const [isEditing, setIsEditing] = useState(false);
 
+  const [isSubmitting, setIsSubmitting] = useState(false); // Nuevo estado
+
+  const [alertStatus, setAlertStatus] = useState('loading'); // 'loading' | 'success' | 'error'
+
+  const [alertTitle, setAlertTitle] = useState('');
+
+  useEffect(() => {
+    setAlertTitle('Usuario');
+  }, []);
+
   const {
-    users,
+    usuarios,
     loading,
     error,
     fetchUsers,
@@ -61,43 +71,82 @@ export default function AdminScreen() {
     fetchUsers();
   }, []);
 
+  // Agrega este useEffect
+  useEffect(() => {
+    if (selectedUser) {
+      setUserForm(prev => ({
+        ...prev,
+        ...selectedUser,
+        edad: String(selectedUser.edad),
+        identificacion: String(selectedUser.identificacion)
+      }));
+    }
+  }, [selectedUser]); // Solo se ejecuta cuando selectedUser cambia
+
+  // 2. Convertir el formato de API a un array plano de usuarios
+  const usuariosPlano = React.useMemo(() => {
+    // Verificar si existen los datos y si son un array
+    if (!usuarios?.data || !Array.isArray(usuarios.data)) {
+      console.error('Estructura de datos inválida:', usuarios);
+      return [];
+    }
+
+    // Los usuarios ya están en data, no necesitan mapeo adicional
+    return usuarios.data.map(usuario => ({
+      ...usuario // Cada usuario es un objeto directo en el array
+    }));
+  }, [usuarios]);
+
   const handleSubmit = async () => {
-    const success = isEditing
-      ? await updateUser(userForm.idPersona, userForm)
-      : await addUser(userForm);
 
-    if (success) {
-      setAlertMessage(isEditing ? 'Usuario actualizado' : 'Usuario creado');
-      resetForm();
-    } else {
-      setAlertMessage('Error en la operación');
-    }
-    setAlertVisible(true);
-  };
-
-  const handleCreateUser = async () => {
     try {
-      const success = await addUser(userForm);
-      if (success) {
-        setAlertMessage('Usuario creado exitosamente');
-        resetForm();
-      } else {
-        setAlertMessage('Error al crear usuario');
-      }
-    } catch (err) {
-      setAlertMessage(err.message);
-    }
-    setAlertVisible(true);
-  };
 
-  // Renderizado condicional para loading y error
-  if (loading) {
-    return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color={COLORS.PRIMARY} />
-      </View>
-    );
-  }
+      setAlertStatus('loading');
+      setAlertVisible(true);
+
+      // Validaciones comunes
+      if (!userForm.nombrePersona || !userForm.apellido || !userForm.identificacion) {
+        throw new Error('Complete todos los campos requeridos');
+      }
+
+      // Validar formato de correo
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(userForm.correo)) {
+        throw new Error('Correo electrónico inválido');
+      }
+
+      const userData = {
+        ...userForm,
+        edad: Number(userForm.edad),
+        identificacion: Number(userForm.identificacion)
+      };
+
+      const success = isEditing
+        ? await updateUser(selectedUser.idPersona, userData)
+        : await addUser(userForm);
+
+      if (success) {
+
+        setAlertStatus('success');
+        setAlertMessage(isEditing ? 'Actualizado exitosamente' : 'Creado exitosamente');
+        resetForm();
+
+        await fetchUsers();
+
+      } else {
+        setAlertStatus('error');
+        setAlertMessage('Error al actualizar el usuario');
+      }
+    } catch (error) {
+
+      setAlertStatus('error');
+      setAlertMessage(error.message);
+
+    } finally {
+      setIsSubmitting(false);
+    }
+
+  };
 
   if (error) {
     return (
@@ -125,7 +174,7 @@ export default function AdminScreen() {
 
         {/* Formulario de usuario */}
         <View style={theme.form}>
-          <Text style={styles.subtitle}>
+          <Text style={theme.subtitle}>
             {isEditing ? 'Editar Usuario' : 'Crear Usuario'}
           </Text>
 
@@ -155,7 +204,11 @@ export default function AdminScreen() {
                 style={styles.input}
                 placeholder="Edad"
                 value={userForm.edad}
-                onChangeText={(text) => setUserForm({ ...userForm, edad: text })}
+                onChangeText={(text) => {
+                  // Validar que solo se ingresen números
+                  const numeric = text.replace(/[^0-9]/g, '');
+                  setUserForm({ ...userForm, edad: numeric })
+                }}
                 keyboardType="numeric"
               />
             </View>
@@ -165,7 +218,11 @@ export default function AdminScreen() {
                 style={styles.input}
                 placeholder="Identificación"
                 value={userForm.identificacion}
-                onChangeText={(text) => setUserForm({ ...userForm, identificacion: text })}
+                onChangeText={(text) => {
+                  // Validar que solo se ingresen números
+                  const numeric = text.replace(/[^0-9]/g, '');
+                  setUserForm({ ...userForm, identificacion: numeric })
+                }}
                 keyboardType="numeric"
               />
             </View>
@@ -185,7 +242,8 @@ export default function AdminScreen() {
             <View style={theme.inputContainer}>
               <TouchableOpacity
                 style={theme.button.primary}
-                onPress={isEditing ? () => handleSubmit(selectedUser.idPersona) : handleCreateUser}
+                onPress={handleSubmit}
+                disabled={loading || isSubmitting}
               >
                 <Text style={theme.button.textPrimary}>
                   {isEditing ? 'Actualizar' : 'Crear'}
@@ -197,15 +255,15 @@ export default function AdminScreen() {
 
         {/* Lista de usuarios */}
         <View style={styles.listContainer}>
-          <Text style={styles.subtitle}>Usuarios Registrados ({users?.length || 0})</Text>
+          <Text style={theme.subtitle}>Usuarios Registrados ({usuariosPlano?.length || 0})</Text>
           <FlatList
-            data={users || []}
+            data={usuariosPlano}
             style={styles.list}
             contentContainerStyle={styles.listContent}
-            keyExtractor={(item) => item.idPersona?.toString() || Math.random().toString()}
+            keyExtractor={(item) => item.idPersona}// || Math.random().toString()
             ListEmptyComponent={() => (
-              <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>
+              <View style={theme.emptyContainer}>
+                <Text style={theme.emptyText}>
                   {loading ? 'Cargando...' : 'No hay usuarios registrados'}
                 </Text>
               </View>
@@ -214,7 +272,8 @@ export default function AdminScreen() {
               <View style={styles.userCard}>
                 <View style={styles.userInfo}>
                   <Text style={styles.userName}>{item.nombrePersona} {item.apellido}</Text>
-                  <Text style={styles.userEmail}>{item.correo}</Text>
+                  <Text style={styles.userEmail}>Usuario: {item.correo}</Text>
+                  <Text style={styles.userEmail}>Identificación: {item.identificacion}</Text>
                   <Text style={styles.userRole}>Rol: {item.rol}</Text>
                 </View>
                 <View style={styles.actionButtons}>
@@ -236,8 +295,15 @@ export default function AdminScreen() {
 
         <CustomAlert
           visible={alertVisible}
+          status={alertStatus}
+          title={alertTitle}
           message={alertMessage}
-          onClose={() => setAlertVisible(false)}
+          onClose={() => {
+            if (alertStatus !== 'loading') {
+              setAlertVisible(false);
+              resetForm();
+            } // Solo resetear si no está cargando
+          }}
         />
       </View >
     </KeyboardAvoidingView>
@@ -273,12 +339,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 20,
-    color: COLORS.TEXT
-  },
-  subtitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginVertical: 10,
     color: COLORS.TEXT
   },
   form: {

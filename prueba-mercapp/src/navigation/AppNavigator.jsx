@@ -60,9 +60,9 @@ export default function AppNavigator() {
     const getInitialRouteName = () => {
         if (!isAuthenticated) return 'Login';
         switch (userRole) {
-            case 'admin': return 'Admin';
-            case 'Microempresario': return 'Micro';
-            case 'Vendedor': return 'Vendor';
+            case 'administrador': return 'Admin';
+            case 'microempresario': return 'Micro';
+            case 'vendedor': return 'Vendor';
             case 'usuario': return 'Home';
             default: return 'Login';
         }
@@ -70,18 +70,21 @@ export default function AppNavigator() {
 
     return (
         <Stack.Navigator initialRouteName={getInitialRouteName()}
-            screenOptions={ScreenOptions}>
+            screenOptions={{
+                ...ScreenOptions,
+                cardStyle: { flex: 1 }, // ¡Esto es crucial!
+            }}>
             {!isAuthenticated ? (
                 <>
-                    <Stack.Screen name="Login" component={LoginScreen} options={{ title: 'MercApp - Inicio de Sesión', headerShown: false}} />
+                    <Stack.Screen name="Login" component={LoginScreen} options={{ title: 'MercApp - Inicio de Sesión', headerShown: false }} />
                     <Stack.Screen name="Registro" component={RegistroScreen} options={{ title: 'Regístrate', }} />
                 </>
             ) : (
                 <>
-                    {userRole === 'admin' && <Stack.Screen name='Admin' component={AdminScreen} options={{ title: 'Administrador@',  headerRight: () => <LogoutButton />}} />}
-                    {userRole === 'Microempresario' && <Stack.Screen name='Micro' component={MicroScreen} options={{ title: 'Microempresari@',  headerRight: () => <LogoutButton /> }} />}
-                    {userRole === 'Vendedor' && <Stack.Screen name='Vendor' component={VendedorScreen} options={{ title: 'Vendedor@',  headerRight: () => <LogoutButton /> }} />}
-                    {userRole === 'usuario' && <Stack.Screen name='Home' component={HomeScreen} options={{ title: 'Usuari@',  headerRight: () => <LogoutButton /> }} />}
+                    {userRole === 'administrador' && <Stack.Screen name='Admin' component={AdminScreen} options={{ title: 'Administrador@', headerRight: () => <LogoutButton /> }} />}
+                    {userRole === 'microempresario' && <Stack.Screen name='Micro' component={MicroScreen} options={{ title: 'Microempresari@', headerRight: () => <LogoutButton /> }} />}
+                    {userRole === 'vendedor' && <Stack.Screen name='Vendor' component={VendedorScreen} options={{ title: 'Vendedor@', headerRight: () => <LogoutButton /> }} />}
+                    {userRole === 'usuario' && <Stack.Screen name='Home' component={HomeScreen} options={{ title: 'Usuari@', headerRight: () => <LogoutButton /> }} />}
                 </>
             )}
         </Stack.Navigator>

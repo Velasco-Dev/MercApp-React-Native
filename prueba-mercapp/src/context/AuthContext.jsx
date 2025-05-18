@@ -9,7 +9,7 @@ export const AuthProvider = ({ children }) => {
     const [userRole, setUserRole] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // const [userId, setUserId] = useState(null);
+    const [userId, setUserId] = useState(null);
 
 
     // Verificar token al iniciar
@@ -20,35 +20,43 @@ export const AuthProvider = ({ children }) => {
     const checkAuth = async () => {
         try {
             const token = await AsyncStorage.getItem('userToken');
-            const role = await AsyncStorage.getItem('userRole');
-            // const id = await AsyncStorage.getItem('userId');
+            const role = await AsyncStorage.getItem('rol');
+            const id = await AsyncStorage.getItem('idPersona');
 
-            if (token && role ) {//&& id
+            if (token && role && id) {//
                 setIsAuthenticated(true);
                 setUserRole(role);
-                // setUserId(id); // ← AÑADIR
+                setUserId(id); // ← AÑADIR
             }
         } catch (error) {
 
             console.error('Error verificando autenticación:', error);
+            // En caso de error, limpiamos los estados
+            setIsAuthenticated(false);
+            setUserRole(null);
+            setUserId(null);
 
         } finally {
             // // Retrasamos ligeramente el cambio de estado de loading
             // setTimeout(() => {
-                setLoading(false);
+            setLoading(false);
             // }, 100);
         }
     };
 
 
-    const login = async (token, role, idPersona) => {
+    const login = async (role, idPersona) => {//token,
         try {
-            await AsyncStorage.setItem('userToken', token);
-            await AsyncStorage.setItem('userRole', role);
-            // await AsyncStorage.getItem('userId', idPersona);
+            // Guardamos todos los datos en AsyncStorage
+            await Promise.all([
+                // AsyncStorage.setItem('sessionToken', token),
+                AsyncStorage.setItem('rol', role),
+                AsyncStorage.setItem('idPersona', idPersona.toString())
+            ]);
 
             setIsAuthenticated(true);
             setUserRole(role);
+            setUserId(idPersona);
         } catch (error) {
             console.error('Error guardando token:', error);
             throw error;
@@ -57,10 +65,17 @@ export const AuthProvider = ({ children }) => {
 
     const logout = async () => {
         try {
-            await AsyncStorage.removeItem('userToken');
-            await AsyncStorage.removeItem('userRole');
+            // Removemos todos los datos de AsyncStorage
+            await Promise.all([
+                AsyncStorage.removeItem('userToken'),
+                // AsyncStorage.removeItem('sessionToken'),
+                AsyncStorage.removeItem('rol'),
+                AsyncStorage.removeItem('idPersona')
+            ]);
+            
             setIsAuthenticated(false);
             setUserRole(null);
+            setUserId(null);
         } catch (error) {
             console.error('Error al cerrar sesión:', error);
             throw error;
@@ -73,7 +88,7 @@ export const AuthProvider = ({ children }) => {
         loading,
         login,
         logout,
-        // userId
+        userId
     };
 
     return (

@@ -1,4 +1,5 @@
 import { API_URL, defaultHeaders, handleResponse } from '../config/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const loginUsuarioF = async (correo, password) => {
     try {
@@ -11,9 +12,15 @@ export const loginUsuarioF = async (correo, password) => {
 
         // if (!response.ok) {
         //     const dataError = await response.json();
-        //     throw new Error(dataError.message || 'Inicio Fallido', response.status);
+        //     throw new Error(dataError.error || 'Inicio Fallido', response.status);
         // }
-        return handleResponse(response);
+        const data = await response.json();
+
+        if (data.success) {
+            await AsyncStorage.setItem('userToken', data.token);
+        }
+
+        return data;
 
         // return response.json();
     } catch (error) {
@@ -32,11 +39,12 @@ export const cerrarSesionF = async () => {
 
         // if (!response.ok) {
         //     const dataError = await response.json();
-        //     throw new Error(dataError.message || 'Cierre Fallido', response.status);
+        //     throw new Error(dataError.error || 'Cierre Fallido', response.status);
         // }
 
         // return response.json();
-        return handleResponse(response);
+        const data = await handleResponse(response);
+        return data;
     } catch (error) {
         console.error('Error en logoutUsuarioF:', error);
         throw error;
@@ -45,7 +53,7 @@ export const cerrarSesionF = async () => {
 
 export const registrarUsuarioF = async (userData) => {
     try {
-        const response = await fetch(`${API_URL}/auth/register`, {
+        const response = await fetch(`${API_URL}/registro`, {
             method: 'POST',
             headers: defaultHeaders,
             credentials: 'include',
@@ -63,11 +71,12 @@ export const registrarUsuarioF = async (userData) => {
 
         // if (!response.ok) {
         //     const dataError = await response.json();
-        //     throw new Error(dataError.message || 'Creación fallida', response.status);
+        //     throw new Error(dataError.error || 'Creación fallida', response.status);
         // }
 
         // return await response.json();
-        return handleResponse(response);
+        const data = await handleResponse(response);
+        return data;
     } catch (error) {
         // throw new Error(error.message || 'Error de conexión con el servidor');
         console.error('Error en registrarUsuarioF:', error);
