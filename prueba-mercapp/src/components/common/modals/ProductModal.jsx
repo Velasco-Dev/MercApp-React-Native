@@ -1,6 +1,6 @@
 import { COLORS } from '../../themes/Colors';
 import { theme } from '../../themes/Theme';
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import {
     Platform, StyleSheet, Modal, View, FlatList, Picker,
     TouchableOpacity, Text
@@ -8,16 +8,33 @@ import {
 
 import { MaterialIcons } from '@expo/vector-icons';
 
+import { MetodoPagoContext } from '../../../context/MetodoPagoContext';
+
 export const ProductModal = ({ visible, onClose, productos, onConfirm }) => {
     const [cart, setCart] = useState([]);
-    const [metodoPagoSeleccionado, setMetodoPagoSeleccionado] = useState('');
+    // const [metodoPagoSeleccionado, setMetodoPagoSeleccionado] = useState('');
+
+    const { metodoPagoSeleccionado, setMetodoPagoSeleccionado } = useContext(MetodoPagoContext);
 
 
-    const metodoPago = [
-        'Método de Pago',
-        'Efectivo',
-        'Transferencia',
-        'Nequi'
+
+    const metodosPago = [
+        {
+            idMetodoPago: 'MP001',
+            nombreMetodoPago: 'Efectivo'
+        },
+        {
+            idMetodoPago: 'MP002',
+            nombreMetodoPago: 'Tarjeta Crédito'
+        },
+        {
+            idMetodoPago: 'MP003',
+            nombreMetodoPago: 'Transferencia'
+        },
+        {
+            idMetodoPago: 'MP004',
+            nombreMetodoPago: 'Nequi'
+        }
     ];
 
     const addToCart = (producto) => {
@@ -152,15 +169,16 @@ export const ProductModal = ({ visible, onClose, productos, onConfirm }) => {
                             )}
                             <View style={styles.picker}>
                                 <Picker
-                                    selectedValue={productos.metodoPago}
-                                    onValueChange={(itemValue) => setMetodoPagoSeleccionado(itemValue) }
+                                    selectedValue={metodoPagoSeleccionado}
+                                    onValueChange={(itemValue) => setMetodoPagoSeleccionado(itemValue)}
                                     style={theme.picker}
                                 >
-                                    {metodoPago.map((cat, index) => (
+                                    <Picker.Item label="Seleccione método de pago" value="" />
+                                    {metodosPago.map((metodo) => (
                                         <Picker.Item
-                                            key={index}
-                                            label={cat}
-                                            value={index === 0 ? '' : cat}
+                                            key={metodo.idMetodoPago}
+                                            label={metodo.nombreMetodoPago}
+                                            value={metodo.idMetodoPago}
                                         />
                                     ))}
                                 </Picker>
@@ -388,10 +406,10 @@ const styles = StyleSheet.create({
         height: '100%',
     },
     picker: {
-       margin: 20,
-       paddingLeft: 30,
-       alignSelf: 'center',
-       alignItems: 'center',
-       alignContent: 'center'
+        margin: 20,
+        paddingLeft: 30,
+        alignSelf: 'center',
+        alignItems: 'center',
+        alignContent: 'center'
     },
 });

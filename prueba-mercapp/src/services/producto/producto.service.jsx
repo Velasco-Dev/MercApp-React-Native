@@ -1,11 +1,14 @@
 import { API_URL, defaultHeaders, handleResponse, getAuthHeaders } from '../config/api';
 
 export const obtenerProductos = async () => {
+
+    const headers = await getAuthHeaders();
+
     try {
         const response = await fetch(`${API_URL}/productos/`, {
             method: 'GET',
             credentials: 'include',
-            headers: defaultHeaders,
+            headers: headers,
         });
 
         if (!response.ok) {

@@ -14,6 +14,8 @@ import { ProductModal } from '../components/common/modals/ProductModal';
 
 import { useAuth } from '../context/AuthContext';
 
+import { MetodoPagoContext } from '../context/MetodoPagoContext';
+
 export default function VendorScreen() {
 
     // Estados y hooks
@@ -28,12 +30,11 @@ export default function VendorScreen() {
     const [modalVisible, setModalVisible] = useState(false);
 
     const [alertVisible, setAlertVisible] = useState(false);
+
+    const [alertTitle, setAlertTitle] = useState('');
     const [alertMessage, setAlertMessage] = useState('');
+    const [alertStatus, setAlertStatus] = useState('loading'); // 'loading' | 'success' | 'error'
 
-    const { userId } = useAuth();
-
-    // console.log(userId);
-    
 
     // Cargar datos iniciales
     useEffect(() => {
@@ -41,69 +42,107 @@ export default function VendorScreen() {
         fetchProductos();
     }, [fetchVentas, fetchProductos]);
 
+    useEffect(() => {
+        setAlertTitle('Vendedor');
+    }, []);
+
+    // 2. Convertir el formato de API a un array plano de productos
+    const productosPlano = React.useMemo(() => {
+        if (!productos?.data?.categorias) return [];
+
+        return productos.data.categorias.flatMap(categoria =>
+            categoria.productos.map(producto => ({
+                ...producto,
+                categoria: categoria.nombreCategoria // Añadimos la categoría a cada producto
+            }))
+        );
+    }, [productos]);
+
+
+    const ventasPlano = React.useMemo(() => {
+        if (!ventas?.data || !Array.isArray(ventas.data)) {
+            console.error('Estructura de datos inválida:', ventas);
+            return [];
+        }
+
+        return ventas.data.map(venta => ({
+            ...venta
+        }));
+    }, [ventas]);
+
     const handleRegisterSale = async (cartItems) => {
         if (!cartItems || cartItems.length === 0) return;
-    
+
         try {
-            // const ventaData = {
-            //     items: cartItems.map(item => ({
-            //         idProducto: item.idProducto,
-            //         cantidadVendida: item.cantidadVendida,
-            //         precioUnitario: item.precioUnitario,
-            //         descuentos: item.descuentos || 0,
-            //         nombre: item.nombre // si necesitas el nombre para mostrar
-            //     })),
-            //     total: cartItems.reduce((sum, item) => sum + item.subTotal, 0),
-            //     fecha: new Date().toISOString(),
-            //     estado: true
-            // };
+
+            setAlertStatus('loading');
+            setAlertVisible(true);
+
+            if (!metodoPagoSeleccionado) {
+                throw new Error('Seleccione un Método de Pago');
+            }
+
             const ventaData = {
-                fechaVenta: new Date().toISOString(),
-                metodoPago: {
-                  nombreMetodoPago: metodoPagoSeleccionado, // ← lo seleccionas desde la UI
-                  fechaEmisionResumen: new Date().toISOString()
-                },
                 productos: cartItems.map(item => ({
-                  idProducto: item.idProducto,
-                  cantidadVendida: item.cantidadVendida,
-                  precioUnitario: item.precioUnitario,
-                  descuentos: item.descuentos || 0
+                    idProducto: item.idProducto,
+                    cantidadVendida: item.cantidadVendida,
+                    precioUnitario: item.precioUnitario,
+                    descuentos: item.descuentos || 0
                 })),
-                idVenta: '01',
-                vendedor: userId // ← este valor debe venir del contexto o sesión del usuario
-              };
-              
-    
+                IdMetodoPago: metodoPagoSeleccionado,
+            };
+
+
             const success = await registrarVenta(ventaData);
-            
+
             if (success) {
+
+                setAlertStatus('success');
+
                 setAlertMessage('Venta registrada exitosamente');
                 setCart([]);
+
                 await fetchVentas(); // Actualizar la lista de ventas
+
+                setModalVisible(false);
+
             } else {
+                setAlertStatus('error');
                 setAlertMessage('Error al registrar la venta');
+                setModalVisible(true);
+
             }
-            setAlertVisible(true);
+
         } catch (error) {
+
+            setModalVisible(true);
+
+            setAlertStatus('error');
             console.error('Error al registrar venta:', error);
-            setAlertMessage('Error al procesar la venta');
-            setAlertVisible(true);
+            setAlertMessage(error.message || 'Error al procesar la venta');
+
         }
     };
 
     const handleConfirmSale = (cartItems) => {
         // Procesar la venta con los items del carrito
+        if (alertStatus === 'error') {
+            setModalVisible(true);
+            setAlertVisible(true);
+        }
+
         handleRegisterSale(cartItems);
-        setModalVisible(false);
+        // setModalVisible(false);
+        setAlertVisible(true);
     };
 
-    if (loading) {
-        return (
-            <View style={styles.centerContainer}>
-                <ActivityIndicator size="large" color={COLORS.PRIMARY} />
-            </View>
-        );
-    }
+    // if (loading) {
+    //     return (
+    //         <View style={styles.centerContainer}>
+    //             <ActivityIndicator size="large" color={COLORS.PRIMARY} />
+    //         </View>
+    //     );
+    // }
 
     if (error) {
         return (
@@ -124,80 +163,89 @@ export default function VendorScreen() {
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             style={{ flex: 1 }}
         >
-            <View style={styles.container}>
-                <Text style={styles.title}>Ventas Realizadas</Text>
+            <MetodoPagoContext.Provider value={{ metodoPagoSeleccionado, setMetodoPagoSeleccionado }}>
 
-                <View style={styles.totalContainer}>
-                    <Text style={styles.totalLabel}>Total del día:</Text>
-                    <Text style={styles.totalAmount}>$</Text>
-                    {/* {todayTotalSales} */}
-                </View>
+                <View style={styles.container}>
+                    <Text style={styles.title}>Ventas Realizadas</Text>
 
-                <TouchableOpacity
-                    style={theme.button.primary}
-                    onPress={() => setModalVisible(true)}
-                    disabled={loading}
-                >
-                    <Text style={theme.button.textPrimary}>
-                        {loading ? 'Registrando...' : 'Nueva Venta'}
-                    </Text>
-                </TouchableOpacity>
-                {/* <Button title="Nueva Venta" onPress={} /> */}
+                    <View style={styles.totalContainer}>
+                        <Text style={styles.totalLabel}>Total del día:</Text>
+                        <Text style={styles.totalAmount}>$</Text>
+                        {/* {todayTotalSales} */}
+                    </View>
 
-                <View style={styles.salesContainer}>
-                    <FlatList
-                        data={ventas}
-                        keyExtractor={sale => sale.idVenta}
-                        style={styles.salesList}
-                        ListEmptyComponent={() => (
-                            <View style={styles.emptyContainer}>
-                                <Text style={styles.emptyText}>
-                                    No hay ventas registradas
-                                </Text>
-                            </View>
-                        )}
-                        renderItem={({ item }) => (
-                            <View style={styles.saleItem}>
-                                <View style={styles.saleHeader}>
-                                    <Text style={styles.saleDate}>
-                                        {new Date(item.fecha).toLocaleDateString()}
-                                    </Text>
-                                    <Text style={styles.saleTotal}>
-                                        Total: ${item.total.toFixed(2)}
+                    <TouchableOpacity
+                        style={theme.button.primary}
+                        onPress={() => setModalVisible(true)}
+                        disabled={loading}
+                    >
+                        <Text style={theme.button.textPrimary}>
+                            {loading ? 'Registrando...' : 'Nueva Venta'}
+                        </Text>
+                    </TouchableOpacity>
+                    {/* <Button title="Nueva Venta" onPress={} /> */}
+
+                    <View style={styles.salesContainer}>
+                        <FlatList
+                            data={ventasPlano}
+                            keyExtractor={sale => sale.idVenta}
+                            style={styles.salesList}
+                            ListEmptyComponent={() => (
+                                <View style={styles.emptyContainer}>
+                                    <Text style={styles.emptyText}>
+                                        No hay ventas registradas
                                     </Text>
                                 </View>
-                                <View style={styles.salesList}>
-                                    {item.items.map(product => (
-                                        <View key={product.idProducto} style={styles.saleProduct}>
-                                            <Text style={styles.productName}>
-                                                {product.nombre} x{product.cantidadVendida}
-                                            </Text>
-                                            <Text style={styles.productPrice}>
-                                                ${(product.precioUnitario * product.cantidadVendida).toFixed(2)}
-                                            </Text>
-                                        </View>
-                                    ))}
+                            )}
+                            renderItem={({ item }) => (
+                                <View style={styles.saleItem}>
+                                    <View style={styles.saleHeader}>
+                                        <Text style={styles.saleDate}>
+                                            {new Date(item.fechaVenta).toLocaleDateString()}
+                                        </Text>
+                                        <Text style={styles.saleTotal}>
+                                            Total: ${item.total.toFixed(2)}
+                                        </Text>
+                                    </View>
+                                    <View style={styles.salesList}>
+                                        {item.productos.map(product => (
+                                            <View key={product.idProducto} style={styles.saleProduct}>
+                                                <Text style={styles.productName}>
+                                                    {product.producto.nombre} x {product.cantidadVendida}
+                                                </Text>
+                                                <Text style={styles.productPrice}>
+                                                    ${(product.precioUnitario * product.cantidadVendida).toFixed(2)}
+                                                </Text>
+                                            </View>
+                                        ))}
+                                    </View>
                                 </View>
-                            </View>
-                        )}
+                            )}
+                        />
+                    </View>
+
+                    {/* // En el return */}
+                    <ProductModal
+                        visible={modalVisible}
+                        onClose={() => setModalVisible(false)}
+                        productos={productosPlano}
+                        onConfirm={handleConfirmSale}
+                    />
+
+                    <CustomAlert
+                        visible={alertVisible}
+                        status={alertStatus}
+                        title={alertTitle}
+                        message={alertMessage}
+                        onClose={() => {
+                            if (alertStatus !== 'loading') {
+                                setAlertVisible(false);
+                            } // Solo resetear si no está cargando
+                        }}
                     />
                 </View>
-
-                {/* // En el return */}
-                <ProductModal
-                    visible={modalVisible}
-                    onClose={() => setModalVisible(false)}
-                    productos={productos}
-                    onConfirm={handleConfirmSale}
-                />
-
-                <CustomAlert
-                    visible={alertVisible}
-                    message={alertMessage}
-                    onClose={() => setAlertVisible(false)}
-                />
-            </View>
-        </KeyboardAvoidingView>
+            </MetodoPagoContext.Provider>
+        </KeyboardAvoidingView >
     );
 }
 
