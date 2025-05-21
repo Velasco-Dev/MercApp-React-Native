@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, FlatList, TextInput, Platform,
-  TouchableOpacity, StyleSheet, Dimensions, ScrollView,
-  KeyboardAvoidingView, ActivityIndicator
+  TouchableOpacity, StyleSheet, Dimensions, KeyboardAvoidingView,
 } from 'react-native';
 
 import { theme } from '../components/themes/Theme';
@@ -12,6 +11,8 @@ import CustomAlert from '../components/common/CustomAlert';
 import { MaterialIcons } from '@expo/vector-icons';
 
 import { Picker } from '@react-native-picker/picker';
+
+import DropDownPicker from 'react-native-dropdown-picker';
 
 import { useProductos } from '../services/hooks/producto.hooks';
 
@@ -34,20 +35,8 @@ export default function MicroScreen() {
   const [alertStatus, setAlertStatus] = useState('loading'); // 'loading' | 'success' | 'error'
 
   useEffect(() => {
-    setAlertTitle('Producto');
+    setAlertTitle('Microempresario');
   }, []);
-
-  const categorias = [
-    'Seleccione una categoría',
-    'Frutas',
-    'Verduras',
-    'Carnes',
-    'Lácteos',
-    'Bebidas',
-    'Snacks',
-    'Limpieza',
-    'Otros'
-  ];
 
   const {
     productos,
@@ -113,6 +102,24 @@ export default function MicroScreen() {
   const filtered = productosPlano.filter(p =>
     p.nombre.toLowerCase().includes(filter.toLowerCase()) ||
     p.categoria.toLowerCase().includes(filter.toLowerCase())
+  );
+
+  const categorias = [
+    // 'Seleccione una categoría',
+    'Frutas',
+    'Verduras',
+    'Carnes',
+    'Lácteos',
+    'Bebidas',
+    'Snacks',
+    'Limpieza',
+    'Otros'
+  ];
+
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(formData.categoria || '');
+  const [items, setItems] = useState(
+    categorias.slice(1).map(cat => ({ label: cat, value: cat }))
   );
 
   const handleSubmit = async () => {
@@ -188,7 +195,7 @@ export default function MicroScreen() {
 
         <Text style={[styles.title, theme.typography.h2]}>Registro de Producto</Text>
 
-        <View style={styles.form}>
+        <View style={[styles.form, {zIndex: 1000}]}>
 
           <View style={styles.formRow}>
             <View style={styles.inputContainer}>
@@ -242,7 +249,7 @@ export default function MicroScreen() {
 
           <View style={styles.formRow}>
             <View style={styles.inputContainer}>
-              <Picker
+              {/* <Picker
                 selectedValue={formData.categoria}
                 onValueChange={(itemValue) =>
                   setFormData({ ...formData, categoria: itemValue })
@@ -256,9 +263,23 @@ export default function MicroScreen() {
                     value={index === 0 ? '' : cat}
                   />
                 ))}
-              </Picker>
+              </Picker> */}
+              <DropDownPicker
+                open={open}
+                value={value}
+                items={items}
+                setOpen={setOpen}
+                setValue={(val) => {
+                  setValue(val);
+                  setFormData({ ...formData, categoria: val });
+                }}
+                setItems={setItems}
+                placeholder="Seleccione una categoría"
+                style={theme.picker}
+              />
             </View>
-            <View style={styles.inputContainer}>
+
+            <View style={[styles.inputContainer, { zIndex: 500 }]}>
               <TextInput
                 placeholder="Descuento"
                 value={formData.descuento}
@@ -275,7 +296,7 @@ export default function MicroScreen() {
           </View>
 
           <TouchableOpacity
-            style={theme.button.primary}
+            style={[theme.button.primary, {zIndex: -1}]}
             onPress={handleSubmit}
             disabled={loading || isSubmitting}
           >
@@ -297,57 +318,57 @@ export default function MicroScreen() {
             }}
           />
         </View>
+        <View style={{ zIndex: 100 }}>
+          <TextInput placeholder="Buscar producto" value={filter} onChangeText={setFilter} style={[styles.inputFilter]} />
+          <Text style={[theme.subtitle]}>Productos Registrados ({productosPlano?.length || 0})</Text>
+        </View>
 
-        <TextInput placeholder="Buscar producto" value={filter} onChangeText={setFilter} style={styles.inputFilter} />
-        <Text style={theme.subtitle}>Productos Registrados ({productosPlano?.length || 0})</Text>
-        <ScrollView style={styles.container}>
-          <FlatList
-            data={filtered}
-            keyExtractor={p => p.idProducto}
-            numColumns={numColumns} // Añade esta línea para mostrar 2 columnas
-            columnWrapperStyle={theme.row} // Añade esta línea para el estilo de las filas
-            // style={theme.flatList}
-            // contentContainerStyle={theme.flatListContent}
-            ListEmptyComponent={() => (
-              <View style={theme.emptyContainer}>
-                <Text style={theme.emptyText}>
-                  {loading ? 'Cargando...' : 'No hay productos registrados'}
-                </Text>
+        <FlatList
+          style={styles.container}
+          data={filtered}
+          keyExtractor={p => p.idProducto}
+          numColumns={numColumns} // Añade esta línea para mostrar 2 columnas
+          columnWrapperStyle={theme.row} // Añade esta línea para el estilo de las filas
+          // style={theme.flatList}
+          // contentContainerStyle={theme.flatListContent}
+          ListEmptyComponent={() => (
+            <View style={theme.emptyContainer}>
+              <Text style={theme.emptyText}>
+                {loading ? 'Cargando...' : 'No hay productos registrados'}
+              </Text>
+            </View>
+          )}
+          renderItem={({ item }) => (
+            <View style={theme.card}>
+              <Text style={theme.name}>{item.nombre}</Text>
+              <Text style={theme.info}>Precio: ${item.precio}</Text>
+              <Text style={theme.info}>Stock: {item.cantidad}</Text>
+              <Text style={theme.info}>Categoría: {item.categoria}</Text>
+              <Text style={theme.info}>Descuento: {item.descuento}%</Text>
+              <View style={theme.card.buttonCardContainer}>
+                <TouchableOpacity
+                  style={[theme.button.editar, theme.card.buttonCard]}
+                  onPress={() => {
+                    setFormData(item);
+                    setIsEditing(true);
+                    setSelectedProduct(item);
+                  }}
+                >
+                  <View style={theme.button.buttonContent}>
+                    <MaterialIcons
+                      name="edit"
+                      size={24}
+                      color={COLORS.BLANCO}
+                      style={theme.button.icon}
+                    />
+                  </View>
+                </TouchableOpacity>
               </View>
-            )}
-            renderItem={({ item }) => (
-              <View style={theme.card}>
-                <Text style={theme.name}>{item.nombre}</Text>
-                <Text style={theme.info}>Precio: ${item.precio}</Text>
-                <Text style={theme.info}>Stock: {item.cantidad}</Text>
-                <Text style={theme.info}>Categoría: {item.categoria}</Text>
-                <Text style={theme.info}>Descuento: {item.descuento}%</Text>
-                <View style={theme.card.buttonCardContainer}>
-                  <TouchableOpacity
-                    style={[theme.button.editar, theme.card.buttonCard]}
-                    onPress={() => {
-                      setFormData(item);
-                      setIsEditing(true);
-                      setSelectedProduct(item);
-                    }}
-                  >
-                    <View style={theme.button.buttonContent}>
-                      <MaterialIcons
-                        name="edit"
-                        size={24}
-                        color={COLORS.BLANCO}
-                        style={theme.button.icon}
-                      />
-                    </View>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )}
-          />
-        </ScrollView>
-
+            </View>
+          )}
+        />
       </View>
-    </KeyboardAvoidingView>
+    </KeyboardAvoidingView >
   );
 }
 const styles = StyleSheet.create({
@@ -372,6 +393,7 @@ const styles = StyleSheet.create({
   form: {
     alignSelf: 'center',
     justifyContent: 'center',
+    marginInline: 20,
     ...Platform.select({
       web: {
         width: '70%', // Más pequeño en web
@@ -379,7 +401,7 @@ const styles = StyleSheet.create({
         // minWidth: 300, // Tamaño mínimo para que sea usable
       },
       default: {
-        width: '100%', // Mantiene el 100% en móvil
+        width: '90%', // Mantiene el 100% en móvil
       }
     }),
     alignItems: 'center',
@@ -406,6 +428,7 @@ const styles = StyleSheet.create({
     }),
   },
   container: {
+    zIndex: 1,
     flex: 1,
     marginTop: 5,
     // paddingTop: 5,

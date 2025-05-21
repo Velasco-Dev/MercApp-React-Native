@@ -1,22 +1,22 @@
 import { COLORS } from '../../themes/Colors';
 import { theme } from '../../themes/Theme';
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import {
-    Platform, StyleSheet, Modal, View, FlatList, Picker,
-    TouchableOpacity, Text
+    Platform, StyleSheet, Modal, View, FlatList,
+    TouchableOpacity, Text, SafeAreaView
 } from 'react-native';
 
 import { MaterialIcons } from '@expo/vector-icons';
 
 import { MetodoPagoContext } from '../../../context/MetodoPagoContext';
 
+import DropDownPicker from 'react-native-dropdown-picker';
+
 export const ProductModal = ({ visible, onClose, productos, onConfirm }) => {
     const [cart, setCart] = useState([]);
     // const [metodoPagoSeleccionado, setMetodoPagoSeleccionado] = useState('');
 
     const { metodoPagoSeleccionado, setMetodoPagoSeleccionado } = useContext(MetodoPagoContext);
-
-
 
     const metodosPago = [
         {
@@ -36,6 +36,21 @@ export const ProductModal = ({ visible, onClose, productos, onConfirm }) => {
             nombreMetodoPago: 'Nequi'
         }
     ];
+
+    const [openMetodo, setOpenMetodo] = useState(false);
+    const [itemsMetodo, setItemsMetodo] = useState([]);
+
+    useEffect(() => {
+        const lista = metodosPago.map(metodo => ({
+            label: metodo.nombreMetodoPago,
+            value: metodo.idMetodoPago
+        }));
+        setItemsMetodo(lista);
+    }, []); // ← Solo se ejecuta una vez al montar
+
+    // useEffect(() => {
+    //     console.log('Productos recibidos en modal:', productos);
+    // }, [productos]);
 
     const addToCart = (producto) => {
         const existingItem = cart.find(item => item.idProducto === producto.idProducto);
@@ -88,7 +103,7 @@ export const ProductModal = ({ visible, onClose, productos, onConfirm }) => {
             transparent={true}
             onRequestClose={onClose}
         >
-            <View style={styles.modalContainer}>
+            <SafeAreaView style={styles.modalContainer}>
                 <View style={styles.modalContent}>
                     <Text style={styles.modalTitle}>Registrar Venta</Text>
 
@@ -98,6 +113,10 @@ export const ProductModal = ({ visible, onClose, productos, onConfirm }) => {
                             <FlatList
                                 data={productos}
                                 keyExtractor={item => item.idProducto}
+                                initialNumToRender={10}
+                                ListEmptyComponent={() => (
+                                    <Text style={{ textAlign: 'center', color: 'gray' }}>No hay productos disponibles</Text>
+                                )}
                                 renderItem={({ item }) => (
                                     <View style={styles.productCard}>
                                         <View style={styles.productInfo}>
@@ -168,20 +187,17 @@ export const ProductModal = ({ visible, onClose, productos, onConfirm }) => {
                                 </View>
                             )}
                             <View style={styles.picker}>
-                                <Picker
-                                    selectedValue={metodoPagoSeleccionado}
-                                    onValueChange={(itemValue) => setMetodoPagoSeleccionado(itemValue)}
-                                    style={theme.picker}
-                                >
-                                    <Picker.Item label="Seleccione método de pago" value="" />
-                                    {metodosPago.map((metodo) => (
-                                        <Picker.Item
-                                            key={metodo.idMetodoPago}
-                                            label={metodo.nombreMetodoPago}
-                                            value={metodo.idMetodoPago}
-                                        />
-                                    ))}
-                                </Picker>
+                                <DropDownPicker
+                                    open={openMetodo}
+                                    value={metodoPagoSeleccionado} // ← usamos directamente el contexto
+                                    items={itemsMetodo}
+                                    setOpen={setOpenMetodo}
+                                    setValue={setMetodoPagoSeleccionado} // ← usamos directamente la función del contexto
+                                    setItems={setItemsMetodo}
+                                    placeholder="Seleccione método de pago"
+                                    style={{ marginBottom: openMetodo ? 200 : 10, zIndex: 1000 }}
+                                    dropDownDirection="AUTO"
+                                />
                             </View>
                         </View>
                     </View>
@@ -203,7 +219,7 @@ export const ProductModal = ({ visible, onClose, productos, onConfirm }) => {
                         </TouchableOpacity>
                     </View>
                 </View>
-            </View>
+            </SafeAreaView >
         </Modal>
     );
 };
@@ -217,7 +233,6 @@ const styles = StyleSheet.create({
     },
     modalContent: {
         backgroundColor: COLORS.BLANCO,
-        width: '90%',
         maxHeight: '80%',
         borderRadius: 10,
         padding: 20,
@@ -229,9 +244,11 @@ const styles = StyleSheet.create({
                 shadowRadius: 3.84,
             },
             android: {
+                width: '90%',
                 elevation: 5,
             },
             web: {
+                width: '60%',
                 boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
             },
         }),
@@ -251,6 +268,7 @@ const styles = StyleSheet.create({
         marginVertical: 5,
         backgroundColor: COLORS.BACKGROUND,
         borderRadius: 8,
+        width: '100%'
     },
     productInfo: {
         flex: 1,
@@ -301,6 +319,7 @@ const styles = StyleSheet.create({
     },
     cartItem: {
         marginVertical: 5,
+        width: 200,
     },
     cartItemText: {
         fontSize: 16,
@@ -388,28 +407,60 @@ const styles = StyleSheet.create({
     modalBody: {
         flex: 1,
         flexDirection: Platform.OS === 'web' ? 'row' : 'column',
+        gap: 20, // separa columnas o secciones
+        paddingBottom: 10,
     },
+
     productList: {
         flex: 1,
-        maxHeight: Platform.OS === 'web' ? '100%' : '50%',
-        maxWidth: Platform.OS === 'web' ? '70%' : '50%',
+        width: Platform.OS === 'web' ? '100%' : '100%',
+        maxHeight: Platform.OS === 'web' ? '100%' : 300, // suficiente para Android
+        borderWidth: 0, // para pruebas puedes usar 1
     },
+
     cartContainer: {
-        flex: Platform.OS === 'web' ? 1 : 1,
-        marginLeft: Platform.OS === 'web' ? 30 : 5,
-        marginTop: Platform.OS === 'web' ? 5 : 20,
+        flex: 1,
+        marginLeft: Platform.OS === 'web' ? 10 : 0,
+        marginTop: Platform.OS === 'web' ? 0 : 20,
+        width: Platform.OS === 'web' ? '80%' : '50%',
         padding: 15,
         backgroundColor: COLORS.BACKGROUND,
         borderRadius: 8,
     },
+
     cartList: {
-        height: '100%',
+        // flexGrow: 0,
+        // maxHeight: 200, // para evitar que el carrito crezca demasiado
     },
+
+
+
+    // modalBody: {
+    //     flex: 1,
+    //     flexDirection: Platform.OS === 'web' ? 'row' : 'column',
+    // },
+    // productList: {
+    //     flex: 1,
+    //     maxHeight: Platform.OS === 'web' ? '100%' : '100%',
+    //     maxWidth: Platform.OS === 'web' ? '70%' : 300,
+    // },
+    // cartContainer: {
+    //     flex: Platform.OS === 'web' ? 1 : 1,
+    //     marginLeft: Platform.OS === 'web' ? 30 : 5,
+    //     marginTop: Platform.OS === 'web' ? 5 : 20,
+    //     padding: 15,
+    //     backgroundColor: COLORS.BACKGROUND,
+    //     borderRadius: 8,
+    // },
+    // cartList: {
+    //     height: '100%',
+    // },
     picker: {
-        margin: 20,
-        paddingLeft: 30,
+        marginTop: 20,
+        paddingLeft: 10,
         alignSelf: 'center',
         alignItems: 'center',
-        alignContent: 'center'
+        alignContent: 'center',
+        width: 200,
     },
 });

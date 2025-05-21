@@ -127,14 +127,14 @@ export const theme = {
     },
     row: {
         flex: 1,
-        justifyContent: 'space-around',
+        justifyContent: 'space-evenly',
         marginBottom: 10,
     },
     card: {
         width: 'auto', // Ancho del 45% para dejar espacio entre cards
         backgroundColor: COLORS.BLANCO,
         borderRadius: 10,
-        padding: 15,
+        padding: 10,
         marginVertical: 8,
         // Sombras
         ...Platform.select({
@@ -148,6 +148,8 @@ export const theme = {
                 shadowRadius: 3.84,
             },
             android: {
+                margin: 5,
+                width: '30%',  //Ancho del 45% para dejar espacio entre cards
                 elevation: 5,
             },
             web: {
@@ -176,6 +178,8 @@ export const theme = {
         marginBottom: 4,
     },
     picker: {
+        // marginBottom: open ? 200 : 10, 
+        zIndex: 6000,
         borderWidth: 1,
         borderColor: COLORS.SECONDARY,
         borderRadius: 5,

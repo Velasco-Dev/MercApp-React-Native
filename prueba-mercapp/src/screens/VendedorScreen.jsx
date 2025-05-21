@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-    View, Text, FlatList, Platform, TouchableOpacity, StyleSheet,
-    Modal, KeyboardAvoidingView, ActivityIndicator, Button
+    View, Text, FlatList, Platform, TouchableOpacity, StyleSheet, KeyboardAvoidingView,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS } from '../components/themes/Colors';

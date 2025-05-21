@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, TextInput,
-  StyleSheet, Platform, ScrollView, ActivityIndicator, KeyboardAvoidingView
+  StyleSheet, Platform, KeyboardAvoidingView
 } from 'react-native';
 
 import CustomAlert from '../components/common/CustomAlert';
