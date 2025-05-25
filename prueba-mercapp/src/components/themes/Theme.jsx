@@ -1,5 +1,5 @@
 import { COLORS } from './Colors';
-import { Platform } from 'react-native';
+import { Platform, Text } from 'react-native';
 
 export const theme = {
     Colors: COLORS,
@@ -131,11 +131,12 @@ export const theme = {
         marginBottom: 10,
     },
     card: {
-        width: 'auto', // Ancho del 45% para dejar espacio entre cards
+        //width: 'auto', // Ancho del 45% para dejar espacio entre cards
         backgroundColor: COLORS.BLANCO,
         borderRadius: 10,
-        padding: 10,
+        // padding: 10,
         marginVertical: 8,
+        alignItems: 'center',
         // Sombras
         ...Platform.select({
             ios: {
@@ -159,18 +160,26 @@ export const theme = {
         buttonCardContainer: {
             flexDirection: 'row',
             justifyContent: 'flex-end',
-            marginTop: 10,
         },
         actionCardButton: {
             padding: 8,
             borderRadius: 5,
         },
+        header: {
+            flexDirection: 'row',
+            backgroundColor: COLORS.GRIS,
+            color: COLORS.BLANCO,
+            borderTopLeftRadius: 10,
+            borderTopRightRadius: 10,
+            width: '100%',
+            padding: 10,
+            alignSelf: 'center'
+        }
     },
     name: {
         fontSize: 16,
         fontWeight: 'bold',
         color: COLORS.TEXT,
-        marginBottom: 8,
     },
     info: {
         fontSize: 14,
@@ -272,7 +281,8 @@ export const theme = {
             web: {
                 userSelect: 'none'
             }
-        })
+        }),
+        alignSelf: 'center'
     },
     emptyContainer: {
         padding: 20,
@@ -282,11 +292,11 @@ export const theme = {
         color: COLORS.SECONDARY,
         fontSize: 16
     },
-  subtitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginVertical: 10,
-    color: COLORS.TEXT,
-    alignSelf: 'center'
-  },
+    subtitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginVertical: 10,
+        color: COLORS.TEXT,
+        alignSelf: 'center'
+    },
 };

@@ -74,10 +74,7 @@ const CustomAlert = ({ status, visible, title, message, onClose, onConfirm = nul
 const styles = StyleSheet.create({
 
     alertView: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
+        boxShadow: '0px 2px 3.84px rgba(0, 0, 0, 0.25)',
         elevation: 5, // Para Android
         backgroundColor: 'white',
         borderRadius: 10,

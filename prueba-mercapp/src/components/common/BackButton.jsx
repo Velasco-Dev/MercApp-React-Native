@@ -1,6 +1,9 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+import { theme } from '../themes/Theme';
+
 
 const BackButton = () => {
     const navigation = useNavigation();
@@ -14,7 +17,7 @@ const BackButton = () => {
             style={styles.headerButton}
             onPress={handlePress}
         >
-            <Text style={styles.headerButtonText}>←</Text>
+            <Ionicons name="arrow-back" size={24} color={theme.Colors.TEXT} />
         </TouchableOpacity>
     );
 };

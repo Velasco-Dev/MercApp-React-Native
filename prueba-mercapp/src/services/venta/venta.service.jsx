@@ -7,7 +7,7 @@ export const obtenerVentas = async () => {
     const idVendedor = await AsyncStorage.getItem('idPersona');
 
     try {
-        const response = await fetch(`${API_URL}/ventas/${idVendedor}`, {
+        const response = await fetch(`${API_URL}/venta/${idVendedor}`, {
             method: 'GET',
             headers: headers,
             credentials: 'include',
@@ -32,7 +32,7 @@ export const crearVenta = async (ventaData) => {
 
     try {
 
-        const response = await fetch(`${API_URL}/ventas/registrar-venta`, {
+        const response = await fetch(`${API_URL}/venta/registrar-venta`, {
             method: 'POST',
             headers: headers,
             credentials: 'include',

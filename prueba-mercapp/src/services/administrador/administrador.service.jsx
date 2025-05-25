@@ -30,7 +30,7 @@ export const crearUsuario = async (userData) => {
     const headers = await getAuthHeaders();
     
     try {
-        const response = await fetch(`${API_URL}/admin/register`, {
+        const response = await fetch(`${API_URL}/admin/registrar-usuario`, {
             method: 'POST',
             headers: headers,
             credentials: 'include',
@@ -52,7 +52,7 @@ export const actualizarUsuario = async (userId, userData) => {
     const headers = await getAuthHeaders();
 
     try {
-        const response = await fetch(`${API_URL}/admin/update/${userId}`, {
+        const response = await fetch(`${API_URL}/admin/actualizar-usuario/${userId}`, {
             method: 'PUT',
             headers: headers,
             credentials: 'include',

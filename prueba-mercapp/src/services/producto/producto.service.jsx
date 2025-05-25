@@ -5,7 +5,7 @@ export const obtenerProductos = async () => {
     const headers = await getAuthHeaders();
 
     try {
-        const response = await fetch(`${API_URL}/productos/`, {
+        const response = await fetch(`${API_URL}/productos/listar-productos`, {
             method: 'GET',
             credentials: 'include',
             headers: headers,

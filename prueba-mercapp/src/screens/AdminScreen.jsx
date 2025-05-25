@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, TextInput,
-  StyleSheet, Platform, KeyboardAvoidingView
+  StyleSheet, Platform, KeyboardAvoidingView, Dimensions
 } from 'react-native';
 
 import CustomAlert from '../components/common/CustomAlert';
@@ -12,6 +12,8 @@ import { theme } from '../components/themes/Theme';
 import { COLORS } from '../components/themes/Colors';
 
 import { MaterialIcons } from '@expo/vector-icons';
+
+import { useNotification } from '../context/NotificationContext';
 export default function AdminScreen() {
 
   // "correo": "jose@gmail.com",
@@ -29,8 +31,14 @@ export default function AdminScreen() {
 
   const [alertTitle, setAlertTitle] = useState('');
 
+  const { addNotification } = useNotification();
+
   useEffect(() => {
     setAlertTitle('Usuario');
+    // Ejecutar solo al montar el componente
+    addNotification({
+      message: "Bienvenido Administrador",
+    });
   }, []);
 
   const {
@@ -162,6 +170,9 @@ export default function AdminScreen() {
     );
   }
 
+  // Dentro del componente, antes del return
+  const screenWidth = Dimensions.get('window').width;
+  const numColumns = screenWidth > 1080 ? 5 : 3; // 3 columnas en pantallas grandes, 2 en pequeñas
 
   return (
 
@@ -261,6 +272,8 @@ export default function AdminScreen() {
             style={styles.list}
             contentContainerStyle={styles.listContent}
             keyExtractor={(item) => item.idPersona}// || Math.random().toString()
+            numColumns={numColumns} // Añade esta línea para mostrar 2 columnas
+            columnWrapperStyle={theme.row} // Añade esta línea para el estilo de las filas
             ListEmptyComponent={() => (
               <View style={theme.emptyContainer}>
                 <Text style={theme.emptyText}>
@@ -269,24 +282,35 @@ export default function AdminScreen() {
               </View>
             )}
             renderItem={({ item }) => (
-              <View style={styles.userCard}>
-                <View style={styles.userInfo}>
-                  <Text style={styles.userName}>{item.nombrePersona} {item.apellido}</Text>
-                  <Text style={styles.userEmail}>Usuario: {item.correo}</Text>
-                  <Text style={styles.userEmail}>Identificación: {item.identificacion}</Text>
-                  <Text style={styles.userRole}>Rol: {item.rol}</Text>
+              <View style={theme.card}>
+                <View style={[theme.card.header]}>
+                  <Text style={[theme.name, { color: theme.Colors.BLANCO }]}>
+                    {item.nombrePersona} {item.apellido}
+                  </Text>
                 </View>
-                <View style={styles.actionButtons}>
-                  <TouchableOpacity
-                    style={[theme.button.editar, styles.actionButton]}
-                    onPress={() => {
-                      setSelectedUser(item);
-                      setUserForm(item);
-                      setIsEditing(true);
-                    }}
-                  >
-                    <MaterialIcons name="edit" size={24} color={COLORS.BLANCO} />
-                  </TouchableOpacity>
+                <View style={{ margin: 10 }}>
+                  <Text style={theme.info}>Usuario: {item.correo}</Text>
+                  <Text style={theme.info}>Identificación: {item.identificacion}</Text>
+                  <Text style={[theme.info, { color: theme.Colors.ACCENT }]}>Rol: {item.rol}</Text>
+                  <View style={theme.card.buttonCardContainer}>
+                    <TouchableOpacity
+                      style={[theme.button.editar, styles.actionButton]}
+                      onPress={() => {
+                        setSelectedUser(item);
+                        setUserForm(item);
+                        setIsEditing(true);
+                      }}
+                    >
+                      <View style={theme.button.buttonContent}>
+                        <MaterialIcons
+                          name="edit"
+                          size={24}
+                          color={COLORS.BLANCO}
+                          style={theme.button.icon}
+                        />
+                      </View>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
             )}
@@ -313,14 +337,14 @@ export default function AdminScreen() {
 const styles = StyleSheet.create({
   listContainer: {
     flex: 1,
-    padding: 20,
+    padding: 10,
     paddingTop: 0
   },
   list: {
     flex: 1
   },
   listContent: {
-    paddingBottom: 20
+    paddingBottom: 10
   },
   emptyContainer: {
     padding: 20,
@@ -332,13 +356,13 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    padding: 20,
+    // padding: 10,
     backgroundColor: COLORS.BACKGROUND
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 20,
+    margin: 20,
     color: COLORS.TEXT
   },
   form: {

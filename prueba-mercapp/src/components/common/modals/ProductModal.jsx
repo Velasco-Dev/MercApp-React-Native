@@ -3,7 +3,7 @@ import { theme } from '../../themes/Theme';
 import { useState, useContext, useEffect } from 'react';
 import {
     Platform, StyleSheet, Modal, View, FlatList,
-    TouchableOpacity, Text, SafeAreaView
+    TouchableOpacity, Text, SafeAreaView, Linking, Alert
 } from 'react-native';
 
 import { MaterialIcons } from '@expo/vector-icons';
@@ -12,11 +12,18 @@ import { MetodoPagoContext } from '../../../context/MetodoPagoContext';
 
 import DropDownPicker from 'react-native-dropdown-picker';
 
+import { usePayment } from '../../../services/hooks/payment.hook';
+
+import { useNavigation } from "@react-navigation/native";
+
 export const ProductModal = ({ visible, onClose, productos, onConfirm }) => {
     const [cart, setCart] = useState([]);
+    const navigation = useNavigation();
     // const [metodoPagoSeleccionado, setMetodoPagoSeleccionado] = useState('');
 
     const { metodoPagoSeleccionado, setMetodoPagoSeleccionado } = useContext(MetodoPagoContext);
+    const { prepareCheckout, loading: paymentLoading, error: paymentError } = usePayment();
+
 
     const metodosPago = [
         {
@@ -51,6 +58,51 @@ export const ProductModal = ({ visible, onClose, productos, onConfirm }) => {
     // useEffect(() => {
     //     console.log('Productos recibidos en modal:', productos);
     // }, [productos]);
+
+    useEffect(() => {
+        if (!visible) {
+            setCart([]);
+        }
+    }, [visible]);
+
+    // Función para determinar si requiere PayU
+    const requiresPayU = (metodoPago) => {
+        return ['MP002', 'MP003', 'MP004'].includes(metodoPago); // Tarjeta, Transferencia, Nequi
+    };
+
+    const getTotalAmount = () => {
+        return cart.reduce((sum, item) => sum + item.subTotal, 0);
+    };
+
+    const handlePayU = async () => {
+        try {
+            // const total = getTotalAmount();
+            // const html = await prepareCheckout({
+            //     amount: total.toFixed(2),
+            //     buyerEmail: 'cliente@email.com', // usa un correo real si lo tienes
+            // });
+
+            // // Extraer el valor de la firma desde el HTML generado
+            // const match = html.match(/signature.*?value="(.*?)"/);
+            // const signature = match?.[1];
+
+            // if (!signature) {
+            //     alert('No se pudo generar la firma de pago.');
+            //     return;
+            // }
+
+            // const payuUrl = `https://api.payulatam.com/payments-api/4.0/service.cgi?k=${signature}#/co/buyer`;
+            // // const payuUrl = `https://sandbox.checkout.payulatam.com/ppp-web-gateway-payu/app/v2?k=${signature}#/co/buyer`;
+            // // const payuUrl = `https://checkout.payulatam.com/ppp-web-gateway-payu/app/v2?k=${signature}#/co/buyer`;
+
+            // await Linking.openURL(payuUrl);
+            navigation.navigate('PaymentWaiting');
+
+        } catch (err) {
+            console.error('Error generando redirección MercadoPago:', err);
+        }
+    };
+
 
     const addToCart = (producto) => {
         const existingItem = cart.find(item => item.idProducto === producto.idProducto);
@@ -182,7 +234,7 @@ export const ProductModal = ({ visible, onClose, productos, onConfirm }) => {
                                         )}
                                     />
                                     <Text style={styles.totalText}>
-                                        Total: ${cart.reduce((sum, item) => sum + item.subTotal, 0).toFixed(2)}
+                                        Total: ${getTotalAmount().toLocaleString()}
                                     </Text>
                                 </View>
                             )}
@@ -199,6 +251,17 @@ export const ProductModal = ({ visible, onClose, productos, onConfirm }) => {
                                     dropDownDirection="AUTO"
                                 />
                             </View>
+                            <View>
+                                {/* Mostrar información sobre PayU si es necesario */}
+                                {requiresPayU(metodoPagoSeleccionado) && (
+                                    <View style={styles.payInfoContainer}>
+                                        <MaterialIcons name="security" size={20} color={COLORS.PRIMARY} />
+                                        <Text style={styles.payInfoText}>
+                                            Este método de pago será procesado a través de MercadoPago
+                                        </Text>
+                                    </View>
+                                )}
+                            </View>
                         </View>
                     </View>
                     {/* Botones */}
@@ -206,18 +269,36 @@ export const ProductModal = ({ visible, onClose, productos, onConfirm }) => {
                         <TouchableOpacity
                             style={[theme.button.secondary, styles.modalButton]}
                             onPress={onClose}
+                            disabled={paymentLoading}
                         >
                             <Text style={theme.button.textPrimary}>Cancelar</Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                            style={[theme.button.primary, styles.modalButton]}
-                            onPress={() => onConfirm(cart)}
-                            disabled={cart.length === 0}
+                            style={[theme.button.primary, styles.modalButton, (cart.length === 0 || paymentLoading) && styles.disabledButton]}
+                            onPress={() => requiresPayU(metodoPagoSeleccionado) ? handlePayU() : onConfirm(cart)}
+                            // onPress={() => onConfirm(cart)}
+                            // onPress={handlePayU}
+                            disabled={cart.length === 0 || paymentLoading}
                         >
-                            <Text style={theme.button.textPrimary}>Confirmar</Text>
+                            {/* <Text style={theme.button.textPrimary}>Confirmar</Text> */}
+                            {paymentLoading ? (
+                                <ActivityIndicator size="small" color="#fff" />
+                            ) : (
+                                <Text style={theme.button.textPrimary}>
+                                    {requiresPayU(metodoPagoSeleccionado) ? 'Pagar' : 'Confirmar'}
+                                    {cart.length > 0 ? ` $${getTotalAmount().toLocaleString()}` : ''}
+                                </Text>
+                            )}
                         </TouchableOpacity>
                     </View>
+
+                    {paymentError && (
+                        <View style={styles.errorContainer}>
+                            <Text style={styles.errorText}>{paymentError}</Text>
+                        </View>
+                    )}
+
                 </View>
             </SafeAreaView >
         </Modal>
@@ -225,6 +306,26 @@ export const ProductModal = ({ visible, onClose, productos, onConfirm }) => {
 };
 
 const styles = StyleSheet.create({
+
+    payInfoContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 10,
+        marginLeft: 10,
+        padding: 10,
+        backgroundColor: '#e3f2fd',
+        borderRadius: 5,
+        maxWidth: 180,
+        alignSelf: 'center',
+        borderLeftWidth: 5,
+        borderLeftColor: theme.Colors.PRIMARY
+    },
+    payInfoText: {
+        marginLeft: 8,
+        fontSize: 12,
+        color: COLORS.PRIMARY,
+        flex: 1,
+    },
     modalContainer: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.5)',
@@ -242,6 +343,7 @@ const styles = StyleSheet.create({
                 shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: 0.25,
                 shadowRadius: 3.84,
+                width: '100%',
             },
             android: {
                 width: '90%',
@@ -426,6 +528,7 @@ const styles = StyleSheet.create({
         padding: 15,
         backgroundColor: COLORS.BACKGROUND,
         borderRadius: 8,
+        alignSelf: 'center'
     },
 
     cartList: {

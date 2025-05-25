@@ -16,6 +16,8 @@ import DropDownPicker from 'react-native-dropdown-picker';
 
 import { useProductos } from '../services/hooks/producto.hooks';
 
+import { useNotification } from '../context/NotificationContext';
+
 export default function MicroScreen() {
 
   // "correo": "ruben@gmail.com",
@@ -34,8 +36,14 @@ export default function MicroScreen() {
 
   const [alertStatus, setAlertStatus] = useState('loading'); // 'loading' | 'success' | 'error'
 
+  const { addNotification } = useNotification();
+
   useEffect(() => {
     setAlertTitle('Microempresario');
+    // Ejecutar solo al montar el componente
+    addNotification({
+      message: "Bienvenido Microempresario",
+    });
   }, []);
 
   const {
@@ -184,7 +192,7 @@ export default function MicroScreen() {
 
   // Dentro del componente, antes del return
   const screenWidth = Dimensions.get('window').width;
-  const numColumns = screenWidth >= 768 ? 5 : 3; // 3 columnas en pantallas grandes, 2 en pequeñas
+  const numColumns = screenWidth > 1080 ? 8 : 3; // 3 columnas en pantallas grandes, 2 en pequeñas
 
   return (
     <KeyboardAvoidingView
@@ -195,7 +203,7 @@ export default function MicroScreen() {
 
         <Text style={[styles.title, theme.typography.h2]}>Registro de Producto</Text>
 
-        <View style={[styles.form, {zIndex: 1000}]}>
+        <View style={[styles.form, { zIndex: 1000 }]}>
 
           <View style={styles.formRow}>
             <View style={styles.inputContainer}>
@@ -296,7 +304,7 @@ export default function MicroScreen() {
           </View>
 
           <TouchableOpacity
-            style={[theme.button.primary, {zIndex: -1}]}
+            style={[theme.button.primary, { zIndex: -1 }]}
             onPress={handleSubmit}
             disabled={loading || isSubmitting}
           >
@@ -339,34 +347,40 @@ export default function MicroScreen() {
             </View>
           )}
           renderItem={({ item }) => (
-            <View style={theme.card}>
-              <Text style={theme.name}>{item.nombre}</Text>
-              <Text style={theme.info}>Precio: ${item.precio}</Text>
-              <Text style={theme.info}>Stock: {item.cantidad}</Text>
-              <Text style={theme.info}>Categoría: {item.categoria}</Text>
-              <Text style={theme.info}>Descuento: {item.descuento}%</Text>
-              <View style={theme.card.buttonCardContainer}>
-                <TouchableOpacity
-                  style={[theme.button.editar, theme.card.buttonCard]}
-                  onPress={() => {
-                    setFormData(item);
-                    setIsEditing(true);
-                    setSelectedProduct(item);
-                  }}
-                >
-                  <View style={theme.button.buttonContent}>
-                    <MaterialIcons
-                      name="edit"
-                      size={24}
-                      color={COLORS.BLANCO}
-                      style={theme.button.icon}
-                    />
-                  </View>
-                </TouchableOpacity>
+            <View style={[theme.card]}>
+              <View style={[theme.card.header]}>
+                <Text style={[theme.name, { color: theme.Colors.BLANCO }]}>
+                  {item.nombre}
+                </Text>
+              </View>
+              <View style={{ padding: 10 }}>
+                <Text style={theme.info}>Precio: ${item.precio}</Text>
+                <Text style={theme.info}>Stock: {item.cantidad}</Text>
+                <Text style={theme.info}>Categoría: {item.categoria}</Text>
+                <Text style={theme.info}>Descuento: {item.descuento}%</Text>
+                <View style={theme.card.buttonCardContainer}>
+                  <TouchableOpacity
+                    style={[theme.button.editar, theme.card.buttonCard]}
+                    onPress={() => {
+                      setFormData(item);
+                      setIsEditing(true);
+                      setSelectedProduct(item);
+                    }}
+                  >
+                    <View style={theme.button.buttonContent}>
+                      <MaterialIcons
+                        name="edit"
+                        size={24}
+                        color={COLORS.BLANCO}
+                        style={theme.button.icon}
+                      />
+                    </View>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
           )}
-        />
+        />        
       </View>
     </KeyboardAvoidingView >
   );

@@ -32,19 +32,17 @@ const LogoutButton = () => {
     };
 
     return (
-        <>
+        <View>
             <TouchableOpacity
                 style={theme.button.logout}
                 onPress={handleLogout}
             >
-                <View style={theme.button.buttonContent}>
-                    <MaterialIcons 
-                        name="logout" 
-                        size={24} 
-                        color={COLORS.BLANCO} 
-                        style={theme.button.icon}
-                    />
-                </View>
+                <MaterialIcons
+                    name="logout"
+                    size={20}
+                    color={COLORS.BLANCO}
+                    style={theme.button.icon}
+                />
             </TouchableOpacity>
 
             <CustomAlert
@@ -55,7 +53,7 @@ const LogoutButton = () => {
                 onConfirm={handleLogoutConfirm}
                 showConfirm={true}
             />
-        </>
+        </View>
     );
 };
 

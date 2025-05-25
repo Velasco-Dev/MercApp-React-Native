@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -7,17 +7,36 @@ import {
     StyleSheet,
     TouchableOpacity,
     useWindowDimensions,
-    Platform
+    Platform, Modal
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS } from '../components/themes/Colors';
 import { theme } from '../components/themes/Theme';
 import Footer from '../components/common/Footer';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// En el componente React donde necesites interactuar con la base de datos
+import { ref, onValue, set, push } from 'firebase/database';
+import { db } from '../services/config/firebase/firebase.config'; // Asegúrate de que la ruta sea correcta
+
+import CustomAlert from '../components/common/CustomAlert';
+
+import { useNotification } from '../context/NotificationContext';
+
 export default function HomeScreen() {
     const { width } = useWindowDimensions();
     const isWeb = Platform.OS === 'web';
     const isLargeScreen = width > 768; // Tablet/Web breakpoint
+
+    const [modalVisible, setModalVisible] = useState(false);
+    const [selectedOption, setSelectedOption] = useState(null);
+
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertTitle, setAlertTitle] = useState('');
+    const [alertMessage, setAlertMessage] = useState('');
+    const [alertStatus, setAlertStatus] = useState('loading'); // 'loading' | 'success' | 'error'
+
 
     const features = [
         {
@@ -37,9 +56,65 @@ export default function HomeScreen() {
         }
     ];
 
+    const options = [
+        { id: 1, label: 'Administrador', value: 'administrador' },
+        { id: 3, label: 'Microempresario', value: 'microempresario' },
+        { id: 2, label: 'Vendedor', value: 'vendedor' },
+    ];
+
+    const { addNotification } = useNotification();
+
+    useEffect(() => {
+        setAlertTitle('Usuario');
+        // Ejecutar solo al montar el componente
+        addNotification({
+            message: "Bienvenido Usuario",
+        });
+    }, []);
+
+    const PushAdminNotification = async (option) => {
+
+        setSelectedOption(option);
+        setModalVisible(false);
+
+        try {
+            const value = await AsyncStorage.getItem('idPersona');
+            console.log(value)
+
+            // Añadir un nuevo elemento a una lista (push genera una clave única)
+            const postsRef = ref(db, 'notificaciones-rol');
+            const newPostRef = push(postsRef); // Genera una nueva clave única en /posts
+
+            set(newPostRef, {
+                titulo: 'Cambio de Rol',
+                rol: option.value,
+                userId: value,
+                timestamp: Date.now() // Usa el tiempo del servidor
+            })
+                .then(() => {
+
+                    setAlertStatus('success');
+                    setAlertMessage('Solicitud enviada exitosamente');
+                    console.log('Nuevo post añadido con clave:', newPostRef.key);
+
+                }).catch((error) => {
+
+                    setAlertStatus('error');
+                    setAlertMessage('Error al enviar la solicitud');
+                    console.error('Error al añadir post:', error);
+
+                });
+
+        } catch (error) {
+            console.error('Error al enviar datos:', error);
+        }
+
+
+    }
+
     return (
         <View style={[styles.mainContainer, theme.container]}>
-            <ScrollView 
+            <ScrollView
                 style={styles.scrollView}
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={isWeb}
@@ -47,7 +122,7 @@ export default function HomeScreen() {
                 {/* Hero Banner */}
                 <View style={styles.heroContainer}>
                     <Image
-                        source = {require('../../assets/b-registro.webp')}
+                        source={require('../../assets/b-registro.webp')}
                         style={styles.heroImage}
                         resizeMode="cover"
                     />
@@ -64,17 +139,17 @@ export default function HomeScreen() {
                     <Text style={styles.sectionTitle}>Nuestras Funcionalidades</Text>
                     <View style={[styles.featuresGrid, isLargeScreen && { flexDirection: 'row' }]}>
                         {features.map((feature, index) => (
-                            <View 
-                                key={index} 
+                            <View
+                                key={index}
                                 style={[
                                     styles.featureCard,
                                     isLargeScreen && { width: '30%', marginHorizontal: '1.5%' }
                                 ]}
                             >
-                                <MaterialIcons 
-                                    name={feature.icon} 
-                                    size={isLargeScreen ? 50 : 40} 
-                                    color={COLORS.PRIMARY} 
+                                <MaterialIcons
+                                    name={feature.icon}
+                                    size={isLargeScreen ? 50 : 40}
+                                    color={COLORS.PRIMARY}
                                 />
                                 <Text style={styles.featureTitle}>{feature.title}</Text>
                                 <Text style={styles.featureDescription}>{feature.description}</Text>
@@ -88,7 +163,7 @@ export default function HomeScreen() {
                     <Text style={styles.sectionTitle}>¿Por qué elegirnos?</Text>
                     <View style={isLargeScreen ? styles.aboutContentWeb : styles.aboutContentMobile}>
                         <Image
-                            source={{ uri: 'https://img.freepik.com/free-photo/business-people-discussing-charts_23-2148473260.jpg' }}
+                            source={{ uri: 'https://images.unsplash.com/photo-1550989460-0adf9ea622e2?q=80&w=1287&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' }}
                             style={isLargeScreen ? styles.aboutImageWeb : styles.aboutImageMobile}
                             resizeMode="cover"
                         />
@@ -103,19 +178,88 @@ export default function HomeScreen() {
                 {/* CTA Section */}
                 <View style={styles.ctaSection}>
                     <Text style={styles.ctaTitle}>¿Listo para empezar?</Text>
-                    <TouchableOpacity style={styles.ctaButton}>
+                    <TouchableOpacity
+                        onPress={() => setModalVisible(true)}
+                        style={styles.ctaButton}>
                         <Text style={styles.ctaButtonText}>Comenzar Ahora</Text>
                     </TouchableOpacity>
                 </View>
 
-                <Footer/>
+                <Footer />
 
             </ScrollView>
+            <Modal
+                transparent={true}
+                visible={modalVisible}
+                onRequestClose={() => setModalVisible(false)}
+            >
+                <TouchableOpacity
+                    style={styles.modalOverlay}
+                    activeOpacity={1}
+                    onPressOut={() => setModalVisible(false)}
+                >
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Solicita un Rol</Text>
+                        {options.map((option) => (
+                            <TouchableOpacity
+                                key={option.id}
+                                style={styles.optionButton}
+                                onPress={() => {
+                                    setAlertVisible(true)
+                                    PushAdminNotification(option)
+                                }}
+                            >
+                                <Text style={styles.optionText}>{option.label}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </TouchableOpacity>
+            </Modal>
+
+            <CustomAlert
+                visible={alertVisible}
+                status={alertStatus}
+                title={alertTitle}
+                message={alertMessage}
+                onClose={() => {
+                    if (alertStatus !== 'loading') {
+                        setAlertVisible(false);
+                        resetForm();
+                    } // Solo resetear si no está cargando
+                }}
+            />
         </View>
     );
 }
 
 const styles = StyleSheet.create({
+    modalTitle: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 20,
+        textAlign: 'center',
+        color: COLORS.TEXT,
+    },
+    modalOverlay: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.5)',
+    },
+    modalContent: {
+        backgroundColor: 'white',
+        borderRadius: 8,
+        padding: 20,
+        width: '80%',
+    },
+    optionButton: {
+        padding: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+    },
+    optionText: {
+        fontSize: 16,
+    },
     mainContainer: {
         flex: 1,
         backgroundColor: COLORS.BACKGROUND,

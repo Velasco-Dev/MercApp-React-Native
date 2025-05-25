@@ -1,20 +1,26 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
-import { ActivityIndicator } from 'react-native';
+import { ActivityIndicator, Linking, View, Image } from 'react-native';
 
 import LoginScreen from '../screens/LoginScreen';
 import AdminScreen from '../screens/AdminScreen';
 import MicroScreen from '../screens/MicroScreen';
-import VendedorScreen from '../screens/VendedorScreen';
 import RegistroScreen from '../screens/RegistroScreen';
+
+import VendedorScreen from '../screens/VendedorScreen';
+import PaymentWaitingScreen from '../screens/payment/PaymentWaitingScreen';
+import PaymentResponseScreen from '../screens/payment/PaymentResponseScreen';
 
 import HomeScreen from '../screens/HomeScreen';
 
 import BackButton from '../components/common/BackButton';
 import LogoutButton from '../components/common/LogoutButton';
+import NotifyButton from '../components/common/NotifyButton';
 
 import { useAuth } from '../context/AuthContext';
 import { theme } from '../components/themes/Theme';
+
+import { useNavigation } from '@react-navigation/native';
 
 const Stack = createStackNavigator();
 
@@ -44,6 +50,18 @@ const ScreenOptions = {
     },
     headerTintColor: '#000',
     headerTitleAlign: 'center',
+    headerRight: () => (
+        <View style={{ flexDirection: 'row' }}>
+            <NotifyButton />
+            <LogoutButton /> {/* Si también necesitas el botón de logout */}
+        </View>
+    ),
+    headerTitle: () => (
+        <Image
+            source={require('../../assets/icon.png')}
+            style={{ width: 120, height: 40, resizeMode: 'contain' }}
+        />
+    ),
 };
 export default function AppNavigator() {
 
@@ -52,7 +70,7 @@ export default function AppNavigator() {
     if (loading) {
         return (
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <ActivityIndicator size="large" color="#0000ff" />
+                <ActivityIndicator size="large" color={theme.Colors.PRIMARY} />
             </View>
         );
     }
@@ -68,6 +86,36 @@ export default function AppNavigator() {
         }
     };
 
+    const navigation = useNavigation();
+
+    useEffect(() => {
+        const handleDeepLink = ({ url }) => {
+            const parsed = new URL(url);
+            const status = parsed.searchParams.get("status");
+            const paymentId = parsed.searchParams.get("payment_id");
+            const preferenceId = parsed.searchParams.get("preference_id");
+
+            console.log("Pago recibido:", { status, paymentId, preferenceId });
+
+            if (!status) return; // Evita navegación con datos incompletos
+
+            // Redirige dentro de tu app según estado
+            navigation.navigate("PaymentResponse", {
+                paymentId,
+                preferenceId,
+                status,
+            });
+        };
+
+        const subscription = Linking.addEventListener("url", handleDeepLink);
+
+        Linking.getInitialURL().then((url) => {
+            if (url) handleDeepLink({ url });
+        });
+
+        return () => subscription.remove();
+    }, []);
+
     return (
         <Stack.Navigator initialRouteName={getInitialRouteName()}
             screenOptions={{
@@ -77,14 +125,32 @@ export default function AppNavigator() {
             {!isAuthenticated ? (
                 <>
                     <Stack.Screen name="Login" component={LoginScreen} options={{ title: 'MercApp - Inicio de Sesión', headerShown: false }} />
-                    <Stack.Screen name="Registro" component={RegistroScreen} options={{ title: 'Regístrate', }} />
+                    <Stack.Screen name="Registro" component={RegistroScreen} options={{ title: 'Regístrate', headerRight: false }} />
                 </>
             ) : (
                 <>
-                    {userRole === 'administrador' && <Stack.Screen name='Admin' component={AdminScreen} options={{ title: 'Administrador@', headerRight: () => <LogoutButton /> }} />}
-                    {userRole === 'microempresario' && <Stack.Screen name='Micro' component={MicroScreen} options={{ title: 'Microempresari@', headerRight: () => <LogoutButton /> }} />}
-                    {userRole === 'vendedor' && <Stack.Screen name='Vendor' component={VendedorScreen} options={{ title: 'Vendedor@', headerRight: () => <LogoutButton /> }} />}
-                    {userRole === 'usuario' && <Stack.Screen name='Home' component={HomeScreen} options={{ title: 'Usuari@', headerRight: () => <LogoutButton /> }} />}
+                    {userRole === 'administrador' && <Stack.Screen name='Admin' component={AdminScreen} />}
+                    {userRole === 'microempresario' && <Stack.Screen name='Micro' component={MicroScreen} />}
+                    {userRole === 'usuario' && <Stack.Screen name='Home' component={HomeScreen} />}
+
+                    {userRole === 'vendedor' && <Stack.Screen name='Vendor' component={VendedorScreen} />}
+                    {userRole === 'vendedor' &&
+                        <Stack.Screen
+                            name='PaymentWaiting'
+                            component={PaymentWaitingScreen}
+                            options={{
+                                gestureEnabled: false, headerShown: false
+                            }}
+                        />}
+                    {userRole === 'vendedor' &&
+                        <Stack.Screen
+                            name='PaymentResponse'
+                            component={PaymentResponseScreen}
+                            options={{
+                                title: 'Procesando Pago',
+                                headerShown: false
+                            }}
+                        />}
                 </>
             )}
         </Stack.Navigator>

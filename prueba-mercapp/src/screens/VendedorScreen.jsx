@@ -1,7 +1,12 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
     View, Text, FlatList, Platform, TouchableOpacity, StyleSheet, KeyboardAvoidingView,
+    Dimensions
 } from 'react-native';
+
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+
+
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS } from '../components/themes/Colors';
 import { theme } from '../components/themes/Theme';
@@ -14,6 +19,8 @@ import { ProductModal } from '../components/common/modals/ProductModal';
 import { useAuth } from '../context/AuthContext';
 
 import { MetodoPagoContext } from '../context/MetodoPagoContext';
+
+import { useNotification } from '../context/NotificationContext';
 
 export default function VendorScreen() {
 
@@ -34,6 +41,7 @@ export default function VendorScreen() {
     const [alertMessage, setAlertMessage] = useState('');
     const [alertStatus, setAlertStatus] = useState('loading'); // 'loading' | 'success' | 'error'
 
+    const { addNotification } = useNotification();
 
     // Cargar datos iniciales
     useEffect(() => {
@@ -43,7 +51,20 @@ export default function VendorScreen() {
 
     useEffect(() => {
         setAlertTitle('Vendedor');
+        // Ejecutar solo al montar el componente
+        addNotification({
+            message: "Bienvenido Vendedor",
+        });
     }, []);
+
+    // Cierra el modal cuando la pantalla pierde el foco
+    useFocusEffect(
+        useCallback(() => {
+            return () => {
+                setModalVisible(false);
+            };
+        }, [])
+    );
 
     // 2. Convertir el formato de API a un array plano de productos
     const productosPlano = React.useMemo(() => {
@@ -106,6 +127,7 @@ export default function VendorScreen() {
                 setModalVisible(false);
 
             } else {
+
                 setAlertStatus('error');
                 setAlertMessage('Error al registrar la venta');
                 setModalVisible(true);
@@ -157,6 +179,11 @@ export default function VendorScreen() {
         );
     }
 
+    // Dentro del componente, antes del return
+    const screenWidth = Dimensions.get('window').width;
+    const numColumns = screenWidth > 1080 ? 5 : 3; // 3 columnas en pantallas grandes, 2 en pequeñas
+
+
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -179,7 +206,7 @@ export default function VendorScreen() {
                         disabled={loading}
                     >
                         <Text style={theme.button.textPrimary}>
-                            {loading ? 'Registrando...' : 'Nueva Venta'}
+                            {loading ? 'Cargando ...' : 'Nueva Venta'}
                         </Text>
                     </TouchableOpacity>
                     {/* <Button title="Nueva Venta" onPress={} /> */}
@@ -188,7 +215,9 @@ export default function VendorScreen() {
                         <FlatList
                             data={ventasPlano}
                             keyExtractor={sale => sale.idVenta}
-                            style={styles.salesList}
+                            numColumns={numColumns} // Añade esta línea para mostrar 2 columnas
+                            columnWrapperStyle={theme.row}
+                            // style={styles.salesList}
                             ListEmptyComponent={() => (
                                 <View style={styles.emptyContainer}>
                                     <Text style={styles.emptyText}>
@@ -199,11 +228,8 @@ export default function VendorScreen() {
                             renderItem={({ item }) => (
                                 <View style={styles.saleItem}>
                                     <View style={styles.saleHeader}>
-                                        <Text style={styles.saleDate}>
-                                            {new Date(item.fechaVenta).toLocaleDateString()}
-                                        </Text>
-                                        <Text style={styles.saleTotal}>
-                                            Total: ${item.total.toFixed(2)}
+                                        <Text style={[styles.saleTotal, { color: theme.Colors.BLANCO }]}>
+                                            ID: {item.idVenta}
                                         </Text>
                                     </View>
                                     <View style={styles.salesList}>
@@ -217,6 +243,14 @@ export default function VendorScreen() {
                                                 </Text>
                                             </View>
                                         ))}
+                                    </View>
+                                    <View style={styles.saleFooter}>
+                                        <Text style={styles.saleDate}>
+                                            {new Date(item.fechaVenta).toLocaleDateString()}
+                                        </Text>
+                                        <Text style={styles.saleTotal}>
+                                            Total: ${item.total.toFixed(2)}
+                                        </Text>
                                     </View>
                                 </View>
                             )}
@@ -299,18 +333,8 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginVertical: 10
     },
-    saleItem: {
-        padding: 10,
-        borderBottomWidth: 1,
-        marginVertical: 5,
-    },
-    saleDate: {
-        fontWeight: 'bold',
-        marginBottom: 5,
-    },
     saleTotal: {
         fontWeight: 'bold',
-        marginTop: 5,
     },
     productRow: {
         flexDirection: 'row',
@@ -368,11 +392,12 @@ const styles = StyleSheet.create({
     },
     salesList: {
         flex: 1,
+        marginInline: 20
     },
     saleItem: {
         backgroundColor: COLORS.BLANCO,
-        borderRadius: 8,
-        padding: 15,
+        borderRadius: 10,
+        // padding: 15,
         marginVertical: 8,
         ...Platform.select({
             ios: {
@@ -385,19 +410,32 @@ const styles = StyleSheet.create({
                 elevation: 5,
             },
             web: {
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                boxShadow: '0 4px 4px rgba(0, 0, 0, 0.26)',
             },
         }),
     },
     saleHeader: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         marginBottom: 10,
+        backgroundColor: theme.Colors.GRIS,
+        padding: 10,
+        borderTopLeftRadius: 10,
+        borderTopRightRadius: 10,
+    },
+    saleFooter: {
+        flexDirection: 'row',
+        padding: 10,
+        backgroundColor: theme.Colors.ACCENT,
+        verticalAlign: 'bottom',
+        borderBottomLeftRadius: 10,
+        borderBottomRightRadius: 10,
+        justifyContent: 'space-between',
     },
     saleDate: {
         fontSize: 16,
-        fontWeight: 'bold',
-        color: COLORS.TEXT,
+        color: theme.Colors.GRIS,
+        alignContent: 'center',
+        textAlign: 'center'
     },
     saleProduct: {
         flexDirection: 'row',
@@ -408,6 +446,7 @@ const styles = StyleSheet.create({
         color: COLORS.SECONDARY,
     },
     productPrice: {
+        marginStart: 5,
         fontWeight: '500',
         color: COLORS.TEXT,
     },
