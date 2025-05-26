@@ -52,19 +52,29 @@ export const cerrarSesionF = async () => {
 };
 
 export const registrarUsuarioF = async (userData) => {
+
     try {
-        const response = await fetch(`${API_URL}/registro`, {
+        // Primero normalizamos los inputs
+        const correoNormalizado = String(userData.correo).toLowerCase().trim();
+        const formatInput = (str) => {
+            return String(str)
+                .trim()
+                .toLowerCase()
+                .replace(/\b\w/g, char => char.toUpperCase());
+        };
+        
+        const response = await fetch(`${API_URL}/usuarios/registro`, {
             method: 'POST',
             headers: defaultHeaders,
             credentials: 'include',
             body: JSON.stringify({
                 rol: userData.rol,
                 estadoPersona: userData.estadoPersona || true,
-                nombrePersona: userData.nombrePersona,
-                apellido: userData.apellido,
+                nombrePersona: formatInput(userData.nombrePersona),
+                apellido: formatInput(userData.apellido),
                 edad: userData.edad,
                 identificacion: userData.identificacion,
-                correo: userData.correo,
+                correo: correoNormalizado,
                 password: userData.password
             })
         });

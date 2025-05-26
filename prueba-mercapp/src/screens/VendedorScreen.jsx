@@ -78,7 +78,6 @@ export default function VendorScreen() {
         );
     }, [productos]);
 
-
     const ventasPlano = React.useMemo(() => {
         if (!ventas?.data || !Array.isArray(ventas.data)) {
             console.error('Estructura de datos inválida:', ventas);

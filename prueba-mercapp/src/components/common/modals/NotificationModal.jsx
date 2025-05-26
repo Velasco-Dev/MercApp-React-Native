@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
+import { Modal, View, Text, StyleSheet, TouchableOpacity, FlatList, useWindowDimensions } from 'react-native';
 import { theme } from '../../themes/Theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useNotification } from '../../../context/NotificationContext'; // ✅ Importa el contexto
@@ -8,6 +8,9 @@ import { useNotification } from '../../../context/NotificationContext'; // ✅ I
 const NotificationModal = ({ visible, onClose }) => {
 
   const { notifications, removeNotification, clearNotifications } = useNotification(); // ✅ Destructura lo necesario
+   const { width: screenWidth } = useWindowDimensions();
+
+  const modalWidth = screenWidth < 500 ? '70%' : screenWidth > 1080 ? '40%' : '50%';
 
   return (
     <Modal visible={visible}
@@ -15,7 +18,7 @@ const NotificationModal = ({ visible, onClose }) => {
       transparent>
 
       <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onClose}>
-        <View style={styles.modal}>
+        <View style={[styles.modal, {width: modalWidth}]}>
           <Text style={styles.title}>Notificaciones</Text>
 
           <FlatList
@@ -24,7 +27,7 @@ const NotificationModal = ({ visible, onClose }) => {
             renderItem={({ item }) => (
               <View style={styles.notificationItem}>
                 <Text style={styles.notificationText}>{item.message}</Text>
-                <TouchableOpacity onPress={() => removeNotification(item.id)}>
+                <TouchableOpacity style={{marginHorizontal: 10}} onPress={() => removeNotification(item.id)}>
                   <Ionicons name="close-circle" size={20} color={theme.Colors.ERROR} />
                 </TouchableOpacity>
               </View>
@@ -79,7 +82,10 @@ const styles = StyleSheet.create({
     borderColor: theme.Colors.GRIS,
     borderStartWidth: 5,
     flexDirection: 'row',
-    justifyContent: 'space-evenly'
+    justifyContent: 'space-evenly',
+    verticalAlign: 'auto',
+    userSelect: 'text',
+    cursor: 'auto',
   },
   notificationText: {
     fontSize: 14,

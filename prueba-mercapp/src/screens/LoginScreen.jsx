@@ -64,7 +64,10 @@ export default function LoginScreen({ navigation }) {
         setLoading(true);
 
         try {
-            const response = await loginUsuarioF(userCorreo, userPassword);
+            // Primero normalizamos los inputs
+            const correoNormalizado = String(userCorreo).toLowerCase().trim();
+            const passwordNormalizado = String(userPassword).trim();
+            const response = await loginUsuarioF(correoNormalizado, passwordNormalizado);
 
             // Verifica que la respuesta tenga la estructura correcta
             if (response && response.success) {

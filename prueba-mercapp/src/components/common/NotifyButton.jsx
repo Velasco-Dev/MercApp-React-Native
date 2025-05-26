@@ -20,7 +20,7 @@ const NotifyButton = () => {
         <Ionicons name="notifications" size={24} color={theme.Colors.ACCENT} />
         {/* Opcional: Badge para contar notificaciones */}
         <View style={style.notification}>
-          <Text style={style.text}>3</Text>
+          <Text style={style.text}>•</Text>
         </View>
       </TouchableOpacity>
     </View>

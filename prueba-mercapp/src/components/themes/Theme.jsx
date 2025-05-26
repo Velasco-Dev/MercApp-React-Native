@@ -37,11 +37,11 @@ export const theme = {
     button: {
         primary: {
             backgroundColor: COLORS.PRIMARY,
-            padding: 15,
+            padding: 10,
             borderRadius: 10,
-            width: '50%',
+            width: 'auto',
             alignSelf: 'center',
-            marginVertical: 10,
+            // marginVertical: 10,
             // Sombras base para iOS
             shadowColor: "#000",
             shadowOffset: {
@@ -55,10 +55,10 @@ export const theme = {
         },
         secondary: {
             backgroundColor: COLORS.SECONDARY,
-            padding: 15,
+            padding: 10,
             borderRadius: 10,
-            width: '40%',
-            marginVertical: 10,
+            width: 'auto',
+            // marginVertical: 10,
             // Sombras base para iOS
             shadowColor: "#000",
             shadowOffset: {
@@ -81,6 +81,7 @@ export const theme = {
             textAlign: 'center',
             fontSize: 14,
             textDecorationLine: 'underline',
+            paddingTop: 15,
         },
         logout: {
             backgroundColor: COLORS.ERROR,
@@ -257,6 +258,12 @@ export const theme = {
         width: '100%',
         marginBottom: 10,
     },
+    formEditRow: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        width: '100%',
+        marginBottom: 10,
+    },
     inputContainer: {
         width: '48%', // Deja un pequeño espacio entre inputs
     },
@@ -299,4 +306,31 @@ export const theme = {
         color: COLORS.TEXT,
         alignSelf: 'center'
     },
+    inputFilter: {
+        borderWidth: 1,
+        borderColor: COLORS.ACCENT,
+        borderRadius: 5,
+        padding: 10,
+        marginTop: 25,
+        marginBottom: 5,
+        backgroundColor: COLORS.BLANCO,
+        color: COLORS.SECONDARY,
+        width: '80%',
+        alignSelf: 'center',
+        ios: {
+            shadowColor: "#000",
+            shadowOffset: {
+                width: 0,
+                height: 2,
+            },
+            shadowOpacity: 0.25,
+            shadowRadius: 3.84,
+        },
+        android: {
+            elevation: 5,
+        },
+        web: {
+            boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+        }
+    }
 };

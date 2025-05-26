@@ -17,8 +17,8 @@ import Footer from '../components/common/Footer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // En el componente React donde necesites interactuar con la base de datos
-import { ref, onValue, set, push } from 'firebase/database';
-import { db } from '../services/config/firebase/firebase.config'; // Asegúrate de que la ruta sea correcta
+import { ref, onValue, set, push, getDatabase, onChildAdded, onChildChanged, onChildRemoved } from 'firebase/database';
+import { dbConfig } from '../services/config/firebase/firebase.config'; // Asegúrate de que la ruta sea correcta
 
 import CustomAlert from '../components/common/CustomAlert';
 
@@ -58,11 +58,13 @@ export default function HomeScreen() {
 
     const options = [
         { id: 1, label: 'Administrador', value: 'administrador' },
-        { id: 3, label: 'Microempresario', value: 'microempresario' },
-        { id: 2, label: 'Vendedor', value: 'vendedor' },
+        { id: 2, label: 'Microempresario', value: 'microempresario' },
+        { id: 3, label: 'Vendedor', value: 'vendedor' },
     ];
 
     const { addNotification } = useNotification();
+    const [notificaciones, setNotificaciones] = useState([]); // Estado para la lista de notificaciones
+    const db = getDatabase();
 
     useEffect(() => {
         setAlertTitle('Usuario');
@@ -70,6 +72,37 @@ export default function HomeScreen() {
         addNotification({
             message: "Bienvenido Usuario",
         });
+
+        const notificacionesRef = ref(db, 'notificaciones-rol-respuesta');
+
+        let currentUserId = null;
+
+        AsyncStorage.getItem('idPersona').then((id) => {
+
+            currentUserId = id;
+
+            const onChildAddedListener = onChildAdded(notificacionesRef, (snapshot) => {
+                const nuevaNotificacion = {
+                    id: snapshot.key,
+                    ...snapshot.val()
+                };
+
+                console.log("Respuesta notificación:", nuevaNotificacion);
+
+                if (nuevaNotificacion.userId === currentUserId) {
+                    addNotification({
+                        message: `${String(nuevaNotificacion.rol).toUpperCase().trim()}, su solicitud fue aceptada ${nuevaNotificacion.timestamp} Cierra sesión e inicia nuevamente con tus mismas credenciales.`
+                    });
+
+                    setNotificaciones(prev => [...prev, nuevaNotificacion]);
+                }
+            });
+
+            return () => {
+                onChildAddedListener();
+            };
+        });
+
     }, []);
 
     const PushAdminNotification = async (option) => {
@@ -84,12 +117,13 @@ export default function HomeScreen() {
             // Añadir un nuevo elemento a una lista (push genera una clave única)
             const postsRef = ref(db, 'notificaciones-rol');
             const newPostRef = push(postsRef); // Genera una nueva clave única en /posts
+            const timestamp = new Date().toLocaleString('es-CO');
 
             set(newPostRef, {
                 titulo: 'Cambio de Rol',
                 rol: option.value,
                 userId: value,
-                timestamp: Date.now() // Usa el tiempo del servidor
+                timestamp: timestamp // Usa el tiempo del servidor
             })
                 .then(() => {
 
@@ -108,8 +142,6 @@ export default function HomeScreen() {
         } catch (error) {
             console.error('Error al enviar datos:', error);
         }
-
-
     }
 
     return (
@@ -224,7 +256,6 @@ export default function HomeScreen() {
                 onClose={() => {
                     if (alertStatus !== 'loading') {
                         setAlertVisible(false);
-                        resetForm();
                     } // Solo resetear si no está cargando
                 }}
             />

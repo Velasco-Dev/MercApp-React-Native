@@ -114,20 +114,24 @@ export default function MicroScreen() {
 
   const categorias = [
     // 'Seleccione una categoría',
-    'Frutas',
-    'Verduras',
-    'Carnes',
-    'Lácteos',
-    'Bebidas',
-    'Snacks',
-    'Limpieza',
-    'Otros'
+    { id: 1, label: 'Frutas', value: 'Frutas' },
+    { id: 2, label: 'Verduras', value: 'Verduras' },
+    { id: 3, label: 'Carnes', value: 'Carnes' },
+    { id: 4, label: 'Lácteos', value: 'Lácteos' },
+    { id: 5, label: 'Bebidas', value: 'Bebidas' },
+    { id: 6, label: 'Snacks', value: 'Snacks' },
+    { id: 7, label: 'Limpieza', value: 'Limpieza' },
+    { id: 8, label: 'Otros', value: 'Otros' },
   ];
+
+  useEffect(() => {
+    setValue(formData.categoria || '');
+  }, [formData.categoria]);
 
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(formData.categoria || '');
   const [items, setItems] = useState(
-    categorias.slice(1).map(cat => ({ label: cat, value: cat }))
+    categorias.map(cat => ({ label: cat.label, value: cat.value }))
   );
 
   const handleSubmit = async () => {
@@ -210,7 +214,10 @@ export default function MicroScreen() {
               <TextInput
                 placeholder="ID Producto"
                 value={formData.idProducto}
-                onChangeText={(text) => setFormData({ ...formData, idProducto: text })}
+                onChangeText={(text) => {
+                  const idNormalizado = String(text).toUpperCase().trim();
+                  setFormData({ ...formData, idProducto: idNormalizado });
+                }}
                 style={styles.input}
               />
             </View>
@@ -218,7 +225,17 @@ export default function MicroScreen() {
               <TextInput
                 placeholder="Nombre del Producto"
                 value={formData.nombre}
-                onChangeText={(text) => setFormData({ ...formData, nombre: text })}
+                onChangeText={(text) => {
+
+                  const capitalizedText = text
+                    .toLowerCase()
+                    .split(' ')
+                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join(' ');
+
+                  setFormData({ ...formData, nombre: capitalizedText });
+
+                }}
                 style={styles.input}
               />
             </View>
@@ -277,9 +294,12 @@ export default function MicroScreen() {
                 value={value}
                 items={items}
                 setOpen={setOpen}
-                setValue={(val) => {
-                  setValue(val);
-                  setFormData({ ...formData, categoria: val });
+                setValue={(callback) => {
+                  setValue(callback);
+                  setFormData((prevForm) => ({
+                    ...prevForm,
+                    categoria: typeof callback === 'function' ? callback(prevForm.categoria) : callback,
+                  }));
                 }}
                 setItems={setItems}
                 placeholder="Seleccione una categoría"
@@ -327,7 +347,7 @@ export default function MicroScreen() {
           />
         </View>
         <View style={{ zIndex: 100 }}>
-          <TextInput placeholder="Buscar producto" value={filter} onChangeText={setFilter} style={[styles.inputFilter]} />
+          <TextInput placeholder="Buscar producto" value={filter} onChangeText={setFilter} style={[theme.inputFilter]} />
           <Text style={[theme.subtitle]}>Productos Registrados ({productosPlano?.length || 0})</Text>
         </View>
 
@@ -380,7 +400,7 @@ export default function MicroScreen() {
               </View>
             </View>
           )}
-        />        
+        />
       </View>
     </KeyboardAvoidingView >
   );

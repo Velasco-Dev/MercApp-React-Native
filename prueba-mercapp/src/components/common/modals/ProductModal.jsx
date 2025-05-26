@@ -3,7 +3,7 @@ import { theme } from '../../themes/Theme';
 import { useState, useContext, useEffect } from 'react';
 import {
     Platform, StyleSheet, Modal, View, FlatList,
-    TouchableOpacity, Text, SafeAreaView, Linking, Alert
+    TouchableOpacity, Text, SafeAreaView, Linking, Alert, TextInput
 } from 'react-native';
 
 import { MaterialIcons } from '@expo/vector-icons';
@@ -16,6 +16,7 @@ import { usePayment } from '../../../services/hooks/payment.hook';
 
 import { useNavigation } from "@react-navigation/native";
 
+
 export const ProductModal = ({ visible, onClose, productos, onConfirm }) => {
     const [cart, setCart] = useState([]);
     const navigation = useNavigation();
@@ -24,6 +25,7 @@ export const ProductModal = ({ visible, onClose, productos, onConfirm }) => {
     const { metodoPagoSeleccionado, setMetodoPagoSeleccionado } = useContext(MetodoPagoContext);
     const { prepareCheckout, loading: paymentLoading, error: paymentError } = usePayment();
 
+    const [filter, setFilter] = useState('');
 
     const metodosPago = [
         {
@@ -103,6 +105,10 @@ export const ProductModal = ({ visible, onClose, productos, onConfirm }) => {
         }
     };
 
+    const filtered = productos.filter(p =>
+        p.nombre.toLowerCase().includes(filter.toLowerCase()) ||
+        p.categoria.toLowerCase().includes(filter.toLowerCase())
+    );
 
     const addToCart = (producto) => {
         const existingItem = cart.find(item => item.idProducto === producto.idProducto);
@@ -162,8 +168,12 @@ export const ProductModal = ({ visible, onClose, productos, onConfirm }) => {
                     <View style={styles.modalBody}>
                         {/* Lista de Productos */}
                         <View style={styles.productList}>
+                            <View style={{ zIndex: 100 }}>
+                                <TextInput placeholder="Buscar producto" value={filter} onChangeText={setFilter} style={[theme.inputFilter]} />
+                                <Text style={[theme.subtitle]}>Productos Registrados ({productos?.length || 0})</Text>
+                            </View>
                             <FlatList
-                                data={productos}
+                                data={filtered}
                                 keyExtractor={item => item.idProducto}
                                 initialNumToRender={10}
                                 ListEmptyComponent={() => (

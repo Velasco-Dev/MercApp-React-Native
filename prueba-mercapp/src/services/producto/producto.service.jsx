@@ -25,7 +25,6 @@ export const obtenerProductos = async () => {
 
 export const crearProducto = async (productoData) => {
     try {
-
         const headers = await getAuthHeaders();
 
         const response = await fetch(`${API_URL}/productos/registrar-producto`, {
@@ -52,9 +51,9 @@ export const crearProducto = async (productoData) => {
 // En producto.service.jsx
 export const editarProducto = async (id, productoData) => {
     try {
-        
+
         const headers = await getAuthHeaders();
-        
+
         const response = await fetch(`${API_URL}/productos/actualizar-producto/${id}`, {
             method: 'PUT',  // o 'PATCH' según tu API
             headers: headers,
