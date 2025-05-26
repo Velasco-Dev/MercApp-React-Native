@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { obtenerVentas, crearVenta } from '../venta/venta.service';
+import { obtenerVentas, crearVenta, crearPago } from '../venta/venta.service';
 
 export const useVentas = () => {
     const [ventas, setVentas] = useState([]);
@@ -33,11 +33,26 @@ export const useVentas = () => {
         }
     }, [fetchVentas]);
 
+    const pagarVenta = useCallback(async (ventaData) => {
+        try {
+            setLoading(true);
+            const response = await crearPago(ventaData);
+            await fetchVentas();
+            return response;
+        } catch (err) {
+            setError(err.message);
+            return false;
+        } finally {
+            setLoading(false);
+        }
+    }, [fetchVentas]);
+
     return {
         ventas,
         loading,
         error,
         fetchVentas,
-        registrarVenta
+        registrarVenta,
+        pagarVenta,
     };
 };

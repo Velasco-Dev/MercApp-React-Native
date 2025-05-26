@@ -17,7 +17,8 @@ import DropDownPicker from 'react-native-dropdown-picker';
 import { useProductos } from '../services/hooks/producto.hooks';
 
 import { useNotification } from '../context/NotificationContext';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ref, onValue, set, push, getDatabase, onChildAdded, onChildChanged, onChildRemoved } from 'firebase/database';
 export default function MicroScreen() {
 
   // "correo": "ruben@gmail.com",
@@ -35,7 +36,10 @@ export default function MicroScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false); // Nuevo estado
 
   const [alertStatus, setAlertStatus] = useState('loading'); // 'loading' | 'success' | 'error'
+  const [currentUserId, setCurrentUserId] = useState(null);
 
+  const db = getDatabase();
+  const [notificaciones, setNotificaciones] = useState([]); // Estado para la lista de notificaciones
   const { addNotification } = useNotification();
 
   useEffect(() => {
@@ -45,6 +49,31 @@ export default function MicroScreen() {
       message: "Bienvenido Microempresario",
     });
   }, []);
+
+  useEffect(() => {
+    if (!currentUserId) return;
+
+    const notificacionesRef = ref(db, 'notificaciones-stock');
+
+    const onChildAddedListener = onChildAdded(notificacionesRef, (snapshot) => {
+      const nuevaNotificacion = {
+        id: snapshot.key,
+        ...snapshot.val()
+      };
+
+      if (nuevaNotificacion.userId === currentUserId) {
+        addNotification({
+          message: `${nuevaNotificacion.nombre.toUpperCase()} tiene stock bajo (${nuevaNotificacion.cantidad} unidades).`
+        });
+
+        setNotificaciones(prev => [...prev, nuevaNotificacion]);
+      }
+    });
+
+    return () => {
+      onChildAddedListener();
+    };
+  }, [currentUserId]);
 
   const {
     productos,
@@ -84,6 +113,19 @@ export default function MicroScreen() {
   }, []);
 
   useEffect(() => {
+    const loadUserId = async () => {
+      try {
+        const id = await AsyncStorage.getItem('idPersona');
+        setCurrentUserId(id);
+      } catch (error) {
+        console.error("Error cargando idPersona desde AsyncStorage:", error);
+      }
+    };
+
+    loadUserId();
+  }, []);
+
+  useEffect(() => {
     if (selectedProduct) {
       setFormData(prev => ({
         ...prev,
@@ -111,6 +153,45 @@ export default function MicroScreen() {
     p.nombre.toLowerCase().includes(filter.toLowerCase()) ||
     p.categoria.toLowerCase().includes(filter.toLowerCase())
   );
+
+
+  useEffect(() => {
+  if (!productosPlano.length || !currentUserId) return;
+
+  const postsRef = ref(db, 'notificaciones-stock');
+
+  productosPlano.forEach((producto) => {
+    if (producto.cantidad < 20) {
+      const productoRef = ref(db, `notificaciones-stock/${producto.idProducto}`);
+
+      // Consultar si ya existe notificación para ese producto
+      onValue(productoRef, (snapshot) => {
+        if (!snapshot.exists()) {
+          // Si no existe, la creamos (una vez)
+          set(productoRef, {
+            titulo: 'Stock bajo',
+            nombre: producto.nombre,
+            cantidad: producto.cantidad,
+            productoId: producto.idProducto,
+            userId: currentUserId,
+            timestamp: new Date().toLocaleString('es-CO')
+          })
+            .then(() => {
+              console.log('Notificación enviada por bajo stock:', producto.nombre);
+            })
+            .catch((error) => {
+              console.error('Error al enviar notificación:', error);
+            });
+        } else {
+          console.log(`Ya existe notificación para ${producto.nombre}, no se duplica.`);
+        }
+      }, {
+        onlyOnce: true
+      });
+    }
+  });
+}, [productosPlano, currentUserId]);
+
 
   const categorias = [
     // 'Seleccione una categoría',
@@ -196,7 +277,7 @@ export default function MicroScreen() {
 
   // Dentro del componente, antes del return
   const screenWidth = Dimensions.get('window').width;
-  const numColumns = screenWidth > 1080 ? 8 : 3; // 3 columnas en pantallas grandes, 2 en pequeñas
+  const numColumns = screenWidth > 1080 ? 8 : screenWidth <= 500 ? 2 : 5;
 
   return (
     <KeyboardAvoidingView
@@ -427,10 +508,10 @@ const styles = StyleSheet.create({
   form: {
     alignSelf: 'center',
     justifyContent: 'center',
-    marginInline: 20,
+    marginInline: 10,
     ...Platform.select({
       web: {
-        width: '70%', // Más pequeño en web
+        width: '80%', // Más pequeño en web
         // maxWidth: 400, // Tamaño máximo para pantallas grandes
         // minWidth: 300, // Tamaño mínimo para que sea usable
       },

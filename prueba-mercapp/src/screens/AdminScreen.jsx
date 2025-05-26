@@ -217,12 +217,12 @@ export default function AdminScreen() {
 
         await fetchUsers();
 
-        if (isEditing && selectedUser?.idPersona === idUsuarioNotificacion ) {          // Añadir un nuevo elemento a una lista (push genera una clave única)
+        if (isEditing && selectedUser?.idPersona === idUsuarioNotificacion) {          // Añadir un nuevo elemento a una lista (push genera una clave única)
           const postsRef = ref(db, 'notificaciones-rol-respuesta');
-          const nuevaRespuestaRef  = push(postsRef); // Genera una nueva clave única en /posts
+          const nuevaRespuestaRef = push(postsRef); // Genera una nueva clave única en /posts
           const timestamp = new Date().toLocaleString('es-CO');
 
-          set(nuevaRespuestaRef , {
+          set(nuevaRespuestaRef, {
             titulo: 'Su solicitud fue aceptada',
             rol: selectedUser.rol,
             userId: selectedUser.idPersona,
@@ -270,7 +270,7 @@ export default function AdminScreen() {
 
   // Dentro del componente, antes del return
   const screenWidth = Dimensions.get('window').width;
-  const numColumns = screenWidth > 1080 ? 5 : screenWidth <= 500 ? 2 : 3;
+  const numColumns = screenWidth > 1080 ? 5 : screenWidth <= 500 ? 2 : 4;
 
   useEffect(() => {
     setValue(userForm.rol || '');
@@ -299,7 +299,22 @@ export default function AdminScreen() {
       style={{ flex: 1 }}
     >
       <View style={[styles.container, theme.container]}>
-        <Text style={styles.title}>Panel de Administración</Text>
+        <View style={{ flexDirection: 'row' }}>
+          <Text style={styles.title}>Panel de Administración</Text>
+          <TouchableOpacity
+            style={[theme.button.primary]}
+            onPress={() => addToCart()}
+          >
+            <MaterialIcons name="add" size={24} color={COLORS.BLANCO} />
+            {/* <Text style={[theme.Colors.BLANCO]}>Listar Productos</Text> */}
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[theme.button.secondary]}
+            onPress={() => addToCart()}
+          >
+            <MaterialIcons name="add" size={24} color={COLORS.BLANCO} />
+          </TouchableOpacity>
+        </View>
 
         {/* Formulario de usuario */}
         <View style={[theme.form, { zIndex: 1000 }]}>
@@ -313,7 +328,16 @@ export default function AdminScreen() {
                 style={styles.input}
                 placeholder="Nombre"
                 value={userForm.nombrePersona}
-                onChangeText={(text) => setUserForm({ ...userForm, nombrePersona: text })}
+                onChangeText={(text) => {
+
+                  const capitalizedText = text
+                    .toLowerCase()
+                    .split(' ')
+                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join(' ');
+
+                  setUserForm({ ...userForm, nombrePersona: capitalizedText });
+                }}
               />
             </View>
 
@@ -322,7 +346,16 @@ export default function AdminScreen() {
                 style={styles.input}
                 placeholder="Apellido"
                 value={userForm.apellido}
-                onChangeText={(text) => setUserForm({ ...userForm, apellido: text })}
+                onChangeText={(text) => {
+
+                  const capitalizedText = text
+                    .toLowerCase()
+                    .split(' ')
+                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join(' ');
+
+                  setUserForm({ ...userForm, apellido: capitalizedText });
+                }}
               />
             </View>
           </View>
@@ -365,7 +398,10 @@ export default function AdminScreen() {
                     style={styles.input}
                     placeholder="Correo"
                     value={userForm.correo}
-                    onChangeText={(text) => setUserForm({ ...userForm, correo: text })}
+                    onChangeText={(text) => {
+                      const correoNormalizado = String(text).toLowerCase().trim();
+                      setUserForm({ ...userForm, correo: correoNormalizado });
+                    }}
                     keyboardType="email-address"
                   />
                 </View>

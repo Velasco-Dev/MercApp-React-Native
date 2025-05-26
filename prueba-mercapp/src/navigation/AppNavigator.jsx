@@ -129,16 +129,17 @@ export default function AppNavigator() {
                 </>
             ) : (
                 <>
-                    {userRole === 'administrador' && <Stack.Screen name='Admin' component={AdminScreen} />}
-                    {userRole === 'microempresario' && <Stack.Screen name='Micro' component={MicroScreen} />}
-                    {userRole === 'usuario' && <Stack.Screen name='Home' component={HomeScreen} />}
+                    {userRole === 'administrador' && <Stack.Screen name='Admin' component={AdminScreen} options={{ title: 'MercApp - Administrador',headerLeft: false }}/>}
+                    {userRole === 'microempresario' && <Stack.Screen name='Micro' component={MicroScreen} options={{ title: 'MercApp - Microempresario', headerLeft: false }}/>}
+                    {userRole === 'usuario' && <Stack.Screen name='Home' component={HomeScreen} options={{ title: 'MercApp - Inicio', headerLeft: false }}/>}
 
-                    {userRole === 'vendedor' && <Stack.Screen name='Vendor' component={VendedorScreen} />}
+                    {userRole === 'vendedor' && <Stack.Screen name='Vendor' component={VendedorScreen} options={{ title: 'MercApp - Vendedor', headerLeft: false }}/>}
                     {userRole === 'vendedor' &&
                         <Stack.Screen
                             name='PaymentWaiting'
                             component={PaymentWaitingScreen}
                             options={{
+                                title: 'MercApp - Procesando Pago',
                                 gestureEnabled: false, headerShown: false
                             }}
                         />}
@@ -147,7 +148,7 @@ export default function AppNavigator() {
                             name='PaymentResponse'
                             component={PaymentResponseScreen}
                             options={{
-                                title: 'Procesando Pago',
+                                title: 'MercApp - Pago',
                                 headerShown: false
                             }}
                         />}

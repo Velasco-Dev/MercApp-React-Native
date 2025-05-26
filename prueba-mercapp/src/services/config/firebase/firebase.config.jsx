@@ -47,7 +47,7 @@ const firebaseConfig = {
   storageBucket: "mercapp-77.firebasestorage.app",
   messagingSenderId: "491178304722",
   appId: "1:491178304722:web:d24bf7c7100811ee5a390b",
-  measurementId: "G-WR7NVV9ENL"
+  // measurementId: "G-WR7NVV9ENL"
 };
 
 // const firebaseConfig = {
@@ -63,5 +63,5 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+// const analytics = getAnalytics(app);
 export const db = getDatabase(app);

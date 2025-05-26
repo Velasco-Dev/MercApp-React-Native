@@ -50,3 +50,28 @@ export const crearVenta = async (ventaData) => {
         throw error;
     }
 };
+
+export const crearPago = async (ventaData) => {
+
+    const headers = await getAuthHeaders();
+
+    try {
+
+        const response = await fetch(`${API_URL}/venta/crear-pago`, {
+            method: 'POST',
+            headers: headers,
+            credentials: 'include',
+            body: JSON.stringify(ventaData)
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Error al pagar la venta');
+        }
+
+        return response.json();
+    } catch (error) {
+        console.error('Error en pagarVenta:', error);
+        throw error;
+    }
+};

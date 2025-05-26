@@ -58,6 +58,7 @@ export const theme = {
             padding: 10,
             borderRadius: 10,
             width: 'auto',
+            alignSelf: 'center',
             // marginVertical: 10,
             // Sombras base para iOS
             shadowColor: "#000",

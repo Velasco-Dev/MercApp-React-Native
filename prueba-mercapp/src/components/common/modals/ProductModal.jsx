@@ -12,6 +12,7 @@ import { MetodoPagoContext } from '../../../context/MetodoPagoContext';
 
 import DropDownPicker from 'react-native-dropdown-picker';
 
+import { useVentas } from '../../../services/hooks/venta.hooks';
 import { usePayment } from '../../../services/hooks/payment.hook';
 
 import { useNavigation } from "@react-navigation/native";
@@ -24,6 +25,8 @@ export const ProductModal = ({ visible, onClose, productos, onConfirm }) => {
 
     const { metodoPagoSeleccionado, setMetodoPagoSeleccionado } = useContext(MetodoPagoContext);
     const { prepareCheckout, loading: paymentLoading, error: paymentError } = usePayment();
+    const { pagarVenta } = useVentas();
+
 
     const [filter, setFilter] = useState('');
 
@@ -68,7 +71,7 @@ export const ProductModal = ({ visible, onClose, productos, onConfirm }) => {
     }, [visible]);
 
     // Función para determinar si requiere PayU
-    const requiresPayU = (metodoPago) => {
+    const requiresMercadoPago = (metodoPago) => {
         return ['MP002', 'MP003', 'MP004'].includes(metodoPago); // Tarjeta, Transferencia, Nequi
     };
 
@@ -76,29 +79,31 @@ export const ProductModal = ({ visible, onClose, productos, onConfirm }) => {
         return cart.reduce((sum, item) => sum + item.subTotal, 0);
     };
 
-    const handlePayU = async () => {
+    const handlePayMercadoPago = async () => {
         try {
-            // const total = getTotalAmount();
-            // const html = await prepareCheckout({
-            //     amount: total.toFixed(2),
-            //     buyerEmail: 'cliente@email.com', // usa un correo real si lo tienes
-            // });
 
-            // // Extraer el valor de la firma desde el HTML generado
-            // const match = html.match(/signature.*?value="(.*?)"/);
-            // const signature = match?.[1];
+            const ventaDataModal = {
+                productos: cart.map(item => ({
+                    idProducto: item.idProducto,
+                    cantidadVendida: item.cantidadVendida,
+                    precioUnitario: item.precioUnitario,
+                    descuentos: item.descuentos || 0
+                })),
+                IdMetodoPago: metodoPagoSeleccionado,
+            };
 
-            // if (!signature) {
-            //     alert('No se pudo generar la firma de pago.');
-            //     return;
-            // }
+            const response = await pagarVenta(ventaDataModal);
+            console.log(response.data.mercadoPago.initPoint);
 
-            // const payuUrl = `https://api.payulatam.com/payments-api/4.0/service.cgi?k=${signature}#/co/buyer`;
-            // // const payuUrl = `https://sandbox.checkout.payulatam.com/ppp-web-gateway-payu/app/v2?k=${signature}#/co/buyer`;
-            // // const payuUrl = `https://checkout.payulatam.com/ppp-web-gateway-payu/app/v2?k=${signature}#/co/buyer`;
+            if (response?.data?.mercadoPago?.initPoint) {
 
-            // await Linking.openURL(payuUrl);
-            navigation.navigate('PaymentWaiting');
+                let urlMercadoPago = response.data.mercadoPago.initPoint;
+                
+                navigation.navigate('PaymentWaiting', { url: urlMercadoPago });
+
+            } else {
+                console.error('Error redirección MercadoPago');
+            }
 
         } catch (err) {
             console.error('Error generando redirección MercadoPago:', err);
@@ -263,7 +268,7 @@ export const ProductModal = ({ visible, onClose, productos, onConfirm }) => {
                             </View>
                             <View>
                                 {/* Mostrar información sobre PayU si es necesario */}
-                                {requiresPayU(metodoPagoSeleccionado) && (
+                                {requiresMercadoPago(metodoPagoSeleccionado) && (
                                     <View style={styles.payInfoContainer}>
                                         <MaterialIcons name="security" size={20} color={COLORS.PRIMARY} />
                                         <Text style={styles.payInfoText}>
@@ -277,7 +282,7 @@ export const ProductModal = ({ visible, onClose, productos, onConfirm }) => {
                     {/* Botones */}
                     <View style={styles.modalActions}>
                         <TouchableOpacity
-                            style={[theme.button.secondary, styles.modalButton]}
+                            style={[theme.button.secondary]}
                             onPress={onClose}
                             disabled={paymentLoading}
                         >
@@ -285,8 +290,8 @@ export const ProductModal = ({ visible, onClose, productos, onConfirm }) => {
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                            style={[theme.button.primary, styles.modalButton, (cart.length === 0 || paymentLoading) && styles.disabledButton]}
-                            onPress={() => requiresPayU(metodoPagoSeleccionado) ? handlePayU() : onConfirm(cart)}
+                            style={[theme.button.primary, (cart.length === 0 || paymentLoading) && styles.disabledButton]}
+                            onPress={() => requiresMercadoPago(metodoPagoSeleccionado) ? handlePayMercadoPago() : onConfirm(cart)}
                             // onPress={() => onConfirm(cart)}
                             // onPress={handlePayU}
                             disabled={cart.length === 0 || paymentLoading}
@@ -296,7 +301,7 @@ export const ProductModal = ({ visible, onClose, productos, onConfirm }) => {
                                 <ActivityIndicator size="small" color="#fff" />
                             ) : (
                                 <Text style={theme.button.textPrimary}>
-                                    {requiresPayU(metodoPagoSeleccionado) ? 'Pagar' : 'Confirmar'}
+                                    {requiresMercadoPago(metodoPagoSeleccionado) ? 'Pagar' : 'Confirmar'}
                                     {cart.length > 0 ? ` $${getTotalAmount().toLocaleString()}` : ''}
                                 </Text>
                             )}
@@ -452,12 +457,13 @@ const styles = StyleSheet.create({
     },
     modalActions: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        justifyContent: 'space-evenly',
         marginTop: 20,
     },
     modalButton: {
         flex: 1,
         marginHorizontal: 5,
+        width: 'auto',
     },
     salesContainer: {
         flex: 1,

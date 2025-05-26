@@ -1,25 +1,34 @@
 import React, { useEffect, useRef, useState } from "react";
-import { View, Text, StyleSheet, ActivityIndicator, Image, Animated } from "react-native";
+import { View, Text, StyleSheet, ActivityIndicator, Image, Animated, Linking } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { theme } from '../../components/themes/Theme';
 
 
-export default function PaymentWaitingScreen() {
+export default function PaymentWaitingScreen({ route }) {
   const navigation = useNavigation();
+  const { url } = route.params || {};
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Simula un delay mientras se prepara/redirige
-    const timer = setTimeout(() => {
-      // Aquí podrías abrir navegador externo o redirigir internamente
-      // Ejemplo: Linking.openURL(pasarelaUrl);
-      // O ir a una pantalla de resultado ficticia mientras pruebas
-      navigation.navigate('Vendor');
+    if (!url) return;
 
-    }, 10000);
+    console.log("Abriendo URL de pago:", url);
+
+    setTimeout(async () => {
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) {
+        Linking.openURL(url);
+      } else {
+        console.error("No se puede abrir la URL:", url);
+      }
+    }, 2000);
+  }, [url]);
+
+
+  useEffect(() => {
 
     Animated.timing(fadeAnim, {
       toValue: 1,
@@ -27,7 +36,6 @@ export default function PaymentWaitingScreen() {
       useNativeDriver: true
     }).start();
 
-    return () => clearTimeout(timer);
   }, []);
 
   return (
@@ -65,7 +73,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20
   },
-  card:{
+  card: {
     padding: 20
   },
   loader: {

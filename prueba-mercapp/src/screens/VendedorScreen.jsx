@@ -25,7 +25,7 @@ import { useNotification } from '../context/NotificationContext';
 export default function VendorScreen() {
 
     // Estados y hooks
-    const { ventas, loading, error, fetchVentas, registrarVenta } = useVentas();
+    const { ventas, loading, error, fetchVentas, registrarVenta, pagarVenta } = useVentas();
     const { productos, fetchProductos } = useProductos();
 
     const [cart, setCart] = useState([]);
@@ -89,6 +89,19 @@ export default function VendorScreen() {
         }));
     }, [ventas]);
 
+    const ventasDelDia = ventasPlano.filter(venta => {
+        const hoy = new Date();
+        const fechaVenta = new Date(venta.fechaVenta);
+
+        return (
+            fechaVenta.getFullYear() === hoy.getFullYear() &&
+            fechaVenta.getMonth() === hoy.getMonth() &&
+            fechaVenta.getDate() === hoy.getDate()
+        );
+    });
+
+    const todayTotalSales = ventasDelDia.reduce((acum, venta) => acum + venta.total, 0);
+
     const handleRegisterSale = async (cartItems) => {
         if (!cartItems || cartItems.length === 0) return;
 
@@ -113,6 +126,14 @@ export default function VendorScreen() {
 
 
             const success = await registrarVenta(ventaData);
+            // const successs = await pagarVenta(ventaData);
+
+            // if (successs) {
+
+            //     // await Linking.openURL(success.);
+            //     console.log(success)
+
+            // }
 
             if (success) {
 
@@ -180,7 +201,7 @@ export default function VendorScreen() {
 
     // Dentro del componente, antes del return
     const screenWidth = Dimensions.get('window').width;
-    const numColumns = screenWidth > 1080 ? 5 : 3; // 3 columnas en pantallas grandes, 2 en pequeñas
+    const numColumns = screenWidth > 1080 ? 6 : screenWidth <= 500 ? 2 : 3;
 
 
     return (
@@ -195,8 +216,8 @@ export default function VendorScreen() {
 
                     <View style={styles.totalContainer}>
                         <Text style={styles.totalLabel}>Total del día:</Text>
-                        <Text style={styles.totalAmount}>$</Text>
-                        {/* {todayTotalSales} */}
+                        <Text style={styles.totalAmount}>$ {todayTotalSales.toLocaleString()}</Text>
+                        {/*  */}
                     </View>
 
                     <TouchableOpacity
