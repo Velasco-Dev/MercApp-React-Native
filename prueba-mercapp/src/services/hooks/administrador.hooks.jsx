@@ -15,22 +15,13 @@ export const useUsuarios = () => {
         try {
             setLoading(true);
             const data = await obtenerUsuarios();
-            // console.log('Datos recibidos:', data);
             setUsers(data);
             setError(null);
-            // Extraer el array de usuarios de la respuesta
-            // const userData = response.usuarios;
-            
-            // if (!userData || !Array.isArray(userData)) {
-            //     throw new Error('Formato de datos inválido');
-            // }
-
-            // setUsers(userData);
-            // setError(null);
+            return true;
         } catch (err) {
-            console.error('Error en fetchUsers:', err);
             setError(err.message);
             setUsers([]); 
+            return false;
         } finally {
             setLoading(false);
         }

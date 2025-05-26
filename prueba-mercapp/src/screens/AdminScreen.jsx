@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, TextInput,
-  StyleSheet, Platform, KeyboardAvoidingView, Dimensions
+  StyleSheet, Platform, KeyboardAvoidingView, Dimensions, ActivityIndicator
 } from 'react-native';
 
 import CustomAlert from '../components/common/CustomAlert';
@@ -18,6 +18,10 @@ import { useNotification } from '../context/NotificationContext';
 import { ref, onValue, set, push, getDatabase, onChildAdded, onChildChanged, onChildRemoved } from 'firebase/database';
 
 import DropDownPicker from 'react-native-dropdown-picker';
+
+import { ProductosModal } from '../components/common/modals/administrador/ProductosModal';
+import { VentasModal } from '../components/common/modals/administrador/VentasModal';
+
 export default function AdminScreen() {
 
   // "correo": "jose@gmail.com",
@@ -40,6 +44,31 @@ export default function AdminScreen() {
   const [notificaciones, setNotificaciones] = useState([]); // Estado para la lista de notificaciones
   const db = getDatabase();
 
+  const [idUsuarioNotificacion, setIdUsuarioNotificacion] = useState(null);
+
+  const [ventasModalVisible, setVentasModalVisible] = useState(false);
+  const [productosModalVisible, setProductosModalVisible] = useState(false);
+
+  const [userForm, setUserForm] = useState({
+    // idPersona: '',
+    nombrePersona: '',
+    apellido: '',
+    edad: '',
+    identificacion: '',
+    correo: '',
+    rol: 'usuario',
+    password: '12345678' // Contraseña por defecto para nuevos usuarios
+  });
+
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(userForm.rol || '');
+  const [items, setItems] = useState([
+    { label: 'Administrador', value: 'administrador' },
+    { label: 'Microempresario', value: 'microempresario' },
+    { label: 'Vendedor', value: 'vendedor' },
+    { label: 'Usuario', value: 'usuario' },
+  ]);
+
   useEffect(() => {
     setAlertTitle('Usuario');
     // Ejecutar solo al montar el componente
@@ -47,40 +76,6 @@ export default function AdminScreen() {
       message: "Bienvenido Administrador",
     });
   }, []);
-
-  const {
-    usuarios,
-    loading,
-    error,
-    fetchUsers,
-    addUser,
-    updateUser,
-    deleteUser
-  } = useUsuarios();
-
-  const [userForm, setUserForm] = useState({
-    idPersona: '',
-    nombrePersona: '',
-    apellido: '',
-    edad: '',
-    identificacion: '',
-    correo: '',
-    rol: 'usuario'
-  });
-
-  const resetForm = () => {
-    setUserForm({
-      idPersona: '',
-      nombrePersona: '',
-      apellido: '',
-      edad: '',
-      identificacion: '',
-      correo: '',
-      rol: 'usuario'
-    });
-    setSelectedUser(null);
-    setIsEditing(false);
-  };
 
   useEffect(() => {
     fetchUsers();
@@ -95,33 +90,10 @@ export default function AdminScreen() {
         edad: String(selectedUser.edad),
         identificacion: String(selectedUser.identificacion)
       }));
+      setValue(selectedUser.rol || '');
     }
   }, [selectedUser]); // Solo se ejecuta cuando selectedUser cambia
 
-  // 2. Convertir el formato de API a un array plano de usuarios
-  const usuariosPlano = React.useMemo(() => {
-    // Verificar si existen los datos y si son un array
-    if (!usuarios?.data || !Array.isArray(usuarios.data)) {
-      console.error('Estructura de datos inválida:', usuarios);
-      return [];
-    }
-
-    // Los usuarios ya están en data, no necesitan mapeo adicional
-    return usuarios.data.map(usuario => ({
-      ...usuario // Cada usuario es un objeto directo en el array
-    }));
-  }, [usuarios]);
-
-  const [filter, setFilter] = useState('');
-
-  const filtered = usuariosPlano.filter(p =>
-    p.nombrePersona.toLowerCase().includes(filter.toLowerCase()) ||
-    p.apellido.toLowerCase().includes(filter.toLowerCase()) ||
-    p.idPersona.toLowerCase().includes(filter.toLowerCase())
-  );
-
-  const [idUsuarioNotificacion, setIdUsuarioNotificacion] = useState(null);
-  const [rolUsuarioNotificacion, setRolUsuarioNotificacion] = useState(null);
 
   useEffect(() => {
     // 1. Crea una referencia a la lista
@@ -181,6 +153,54 @@ export default function AdminScreen() {
     };
   }, []); // El array vacío [] asegura que este efecto solo se ejecute al montar/desmontar
 
+  // Hook personalizado para manejar usuarios
+  const {
+    usuarios,
+    loading,
+    error,
+    fetchUsers,
+    addUser,
+    updateUser,
+    deleteUser
+  } = useUsuarios();
+
+  const resetForm = () => {
+    setUserForm({
+      // idPersona: '',
+      nombrePersona: '',
+      apellido: '',
+      edad: '',
+      identificacion: '',
+      correo: '',
+      rol: 'usuario',
+      password: '12345678' // Resetea a la contraseña por defecto
+    });
+    setSelectedUser(null);
+    setIsEditing(false);
+  };
+
+  // 2. Convertir el formato de API a un array plano de usuarios
+  const usuariosPlano = React.useMemo(() => {
+    // Verificar si existen los datos y si son un array
+    if (!usuarios?.data || !Array.isArray(usuarios.data)) {
+      console.error('Estructura de datos inválida:', usuarios);
+      return [];
+    }
+
+    // Los usuarios ya están en data, no necesitan mapeo adicional
+    return usuarios.data.map(usuario => ({
+      ...usuario // Cada usuario es un objeto directo en el array
+    }));
+  }, [usuarios]);
+
+  const [filter, setFilter] = useState('');
+
+  const filtered = usuariosPlano.filter(p =>
+    p.nombrePersona.toLowerCase().includes(filter.toLowerCase()) ||
+    p.apellido.toLowerCase().includes(filter.toLowerCase()) ||
+    p.idPersona.toLowerCase().includes(filter.toLowerCase())
+  );
+
   const handleSubmit = async () => {
 
     try {
@@ -202,7 +222,8 @@ export default function AdminScreen() {
       const userData = {
         ...userForm,
         edad: Number(userForm.edad),
-        identificacion: Number(userForm.identificacion)
+        identificacion: Number(userForm.identificacion),
+        rol: value // Usa el valor actual del dropdown
       };
 
       const success = isEditing
@@ -254,6 +275,19 @@ export default function AdminScreen() {
 
   };
 
+  // if (loading) {
+  //   return (
+  //     <View style={styles.centerContainer}>
+  //       <ActivityIndicator size="large" color={theme.Colors.PRIMARY} />
+  //     </View>
+  //   );
+  // }
+
+
+  // Dentro del componente, antes del return
+  const screenWidth = Dimensions.get('window').width;
+  const numColumns = screenWidth > 1080 ? 5 : screenWidth <= 500 ? 2 : 4;
+
   if (error) {
     return (
       <View style={styles.centerContainer}>
@@ -268,30 +302,6 @@ export default function AdminScreen() {
     );
   }
 
-  // Dentro del componente, antes del return
-  const screenWidth = Dimensions.get('window').width;
-  const numColumns = screenWidth > 1080 ? 5 : screenWidth <= 500 ? 2 : 4;
-
-  useEffect(() => {
-    setValue(userForm.rol || '');
-  }, [userForm.rol]);
-
-
-  const roles = [
-    { id: 1, label: 'Administrador', value: 'administrador' },
-    { id: 2, label: 'Microempresario', value: 'microempresario' },
-    { id: 3, label: 'Vendedor', value: 'vendedor' },
-    { id: 4, label: 'Usuario', value: 'usuario' },
-  ];
-
-  const [open, setOpen] = useState(false);
-  const [value, setValue] = useState(userForm.rol || '');
-  const [items, setItems] = useState(
-    roles.map(cat => ({ label: cat.label, value: cat.value }))
-  );
-
-
-
   return (
 
     <KeyboardAvoidingView
@@ -299,20 +309,19 @@ export default function AdminScreen() {
       style={{ flex: 1 }}
     >
       <View style={[styles.container, theme.container]}>
-        <View style={{ flexDirection: 'row' }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', paddingInline: 10 }}>
           <Text style={styles.title}>Panel de Administración</Text>
           <TouchableOpacity
             style={[theme.button.primary]}
-            onPress={() => addToCart()}
+            onPress={() => setVentasModalVisible(true)}
           >
-            <MaterialIcons name="add" size={24} color={COLORS.BLANCO} />
-            {/* <Text style={[theme.Colors.BLANCO]}>Listar Productos</Text> */}
+            <Text style={{ color: COLORS.BLANCO, fontWeight: 'bold' }}>Ver Ventas</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[theme.button.secondary]}
-            onPress={() => addToCart()}
+            onPress={() => setProductosModalVisible(true)}
           >
-            <MaterialIcons name="add" size={24} color={COLORS.BLANCO} />
+            <Text style={{ color: COLORS.BLANCO, fontWeight: 'bold' }}>Ver Productos</Text>
           </TouchableOpacity>
         </View>
 
@@ -413,7 +422,7 @@ export default function AdminScreen() {
                     onChangeText={(text) => setUserForm({ ...userForm, rol: text })}
                     keyboardType="default"
                   /> */}
-                  <DropDownPicker
+                  {/* <DropDownPicker
                     open={open}
                     value={value}
                     items={items}
@@ -428,6 +437,22 @@ export default function AdminScreen() {
                     setItems={setItems}
                     placeholder="Seleccione un rol"
                     style={theme.picker}
+                  /> */}
+
+                  <DropDownPicker
+                    open={open}
+                    value={value}
+                    items={items}
+                    setOpen={setOpen}
+                    setValue={(newValue) => {
+                      setValue(newValue);
+                      setUserForm(prev => ({ ...prev, rol: newValue }));
+                    }}
+                    setItems={setItems}
+                    placeholder="Seleccione un rol"
+                    style={theme.picker}
+                    //zIndex={open ? 1000 : 1}  Importante para el orden de superposición
+                    //listMode="MODAL" // Para mejor comportamiento en móviles
                   />
                 </View>
               </View>
@@ -539,8 +564,20 @@ export default function AdminScreen() {
             } // Solo resetear si no está cargando
           }}
         />
+
+        <VentasModal
+          visible={ventasModalVisible}
+          onClose={() => setVentasModalVisible(false)}
+        // onConfirm={handleConfirmSale}
+        />
+
+        <ProductosModal
+          visible={productosModalVisible}
+          onClose={() => setProductosModalVisible(false)}
+        // onConfirm={handleConfirmSale}
+        />
       </View >
-    </KeyboardAvoidingView>
+    </KeyboardAvoidingView >
   );
 }
 

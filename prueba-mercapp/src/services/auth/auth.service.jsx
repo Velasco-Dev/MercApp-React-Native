@@ -14,7 +14,8 @@ export const loginUsuarioF = async (correo, password) => {
         //     const dataError = await response.json();
         //     throw new Error(dataError.error || 'Inicio Fallido', response.status);
         // }
-        const data = await response.json();
+        // const data = await response.json();
+        const data = await handleResponse(response);
 
         if (data.success) {
             await AsyncStorage.setItem('userToken', data.token);

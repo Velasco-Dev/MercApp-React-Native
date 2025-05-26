@@ -1,4 +1,4 @@
-import { API_URL, defaultHeaders, getAuthHeaders } from '../config/api';
+import { API_URL, defaultHeaders, getAuthHeaders, handleResponse } from '../config/api';
 
 
 export const obtenerUsuarios = async () => {
@@ -12,11 +12,13 @@ export const obtenerUsuarios = async () => {
             credentials: 'include'
         });
 
-        if (!response.ok) {
-            throw new Error('Error al obtener usuarios');
-        }
+        // if (!response.ok) {
+        //     throw new Error('Error al obtener usuarios');
+        // }
 
-        const data = await response.json();
+        // const data = await response.json();
+        // return data;
+        const data = await handleResponse(response);
         return data;
 
     } catch (error) {
@@ -37,11 +39,13 @@ export const crearUsuario = async (userData) => {
             body: JSON.stringify(userData)
         });
 
-        if (!response.ok) {
-            throw new Error('Error al crear usuario');
-        }
+        // if (!response.ok) {
+        //     throw new Error('Error al crear usuario');
+        // }
 
-        return response.json();
+        // return response.json();
+        const data = await handleResponse(response);
+        return data;
     } catch (error) {
         throw error;
     }
@@ -63,9 +67,12 @@ export const actualizarUsuario = async (userId, userData) => {
             throw new Error('Error al actualizar usuario');
         }
 
-        return response.json();
+        return await handleResponse(response);
+        // return response.json();
+        // const data = await handleResponse(response);
+        // return data;
     } catch (error) {
-        throw error;
+        throw new Error(error.message || 'Error al actualizar usuario');
     }
 };
 
@@ -81,11 +88,13 @@ export const eliminarUsuario = async (userId) => {
             credentials: 'include'
         });
 
-        if (!response.ok) {
-            throw new Error('Error al eliminar usuario');
-        }
+        // if (!response.ok) {
+        //     throw new Error('Error al eliminar usuario');
+        // }
 
-        return response.json();
+        // return response.json();
+        const data = await handleResponse(response);
+        return data;
     } catch (error) {
         throw error;
     }

@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API_URL, defaultHeaders, getAuthHeaders } from '../config/api';
+import { API_URL, defaultHeaders, getAuthHeaders, handleResponse } from '../config/api';
 
 export const obtenerVentas = async () => {
 
@@ -14,12 +14,14 @@ export const obtenerVentas = async () => {
 
         });
 
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Error al obtener las ventas');
-        }
+        // if (!response.ok) {
+        //     const error = await response.json();
+        //     throw new Error(error.message || 'Error al obtener las ventas');
+        // }
 
-        return response.json();
+        // return response.json();
+        const data = await handleResponse(response);
+        return data;
     } catch (error) {
         console.error('Error en obtenerVentas:', error);
         throw error;
@@ -39,12 +41,14 @@ export const crearVenta = async (ventaData) => {
             body: JSON.stringify(ventaData)
         });
 
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Error al registrar la venta');
-        }
+        // if (!response.ok) {
+        //     const error = await response.json();
+        //     throw new Error(error.message || 'Error al registrar la venta');
+        // }
 
-        return response.json();
+        // return response.json();
+        const data = await handleResponse(response);
+        return data;
     } catch (error) {
         console.error('Error en registrarVenta:', error);
         throw error;
@@ -64,12 +68,14 @@ export const crearPago = async (ventaData) => {
             body: JSON.stringify(ventaData)
         });
 
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Error al pagar la venta');
-        }
+        // if (!response.ok) {
+        //     const error = await response.json();
+        //     throw new Error(error.message || 'Error al pagar la venta');
+        // }
 
-        return response.json();
+        // return response.json();
+        const data = await handleResponse(response);
+        return data;
     } catch (error) {
         console.error('Error en pagarVenta:', error);
         throw error;

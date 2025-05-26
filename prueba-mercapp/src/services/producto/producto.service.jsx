@@ -10,13 +10,16 @@ export const obtenerProductos = async () => {
             credentials: 'include',
             headers: headers,
         });
+        
 
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Error al obtener productos');
-        }
+        // if (!response.ok) {
+        //     const error = await response.json();
+        //     throw new Error(error.message || 'Error al obtener productos');
+        // }
 
-        return response.json();
+        // return response.json();
+        const data = await handleResponse(response);
+        return data;
     } catch (error) {
         console.error('Error en obtenerProductos:', error);
         throw error;
@@ -61,12 +64,14 @@ export const editarProducto = async (id, productoData) => {
             body: JSON.stringify(productoData)
         });
 
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Error al actualizar el producto');
-        }
+        // if (!response.ok) {
+        //     const error = await response.json();
+        //     throw new Error(error.message || 'Error al actualizar el producto');
+        // }
 
-        return handleResponse(response);
+        // return handleResponse(response);
+        const data = await handleResponse(response);
+        return data;
     } catch (error) {
         console.error('Error en editarProducto:', error);
         throw error;

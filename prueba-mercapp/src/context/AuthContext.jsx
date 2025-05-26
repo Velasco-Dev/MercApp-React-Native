@@ -11,10 +11,24 @@ export const AuthProvider = ({ children }) => {
 
     const [userId, setUserId] = useState(null);
 
-
     // Verificar token al iniciar
     useEffect(() => {
         checkAuth();
+    }, []);
+
+    useEffect(() => {
+        const checkTokenExpiration = async () => {
+            try {
+                // Aquí podrías hacer un ping o una llamada a perfil
+            } catch (error) {
+                if (error.message === 'Sesión expirada') {
+                    setIsAuthenticated(false);
+                    setUserRole(null);
+                }
+            }
+        };
+
+        checkTokenExpiration();
     }, []);
 
     const checkAuth = async () => {
@@ -72,7 +86,7 @@ export const AuthProvider = ({ children }) => {
                 AsyncStorage.removeItem('rol'),
                 AsyncStorage.removeItem('idPersona')
             ]);
-            
+
             setIsAuthenticated(false);
             setUserRole(null);
             setUserId(null);

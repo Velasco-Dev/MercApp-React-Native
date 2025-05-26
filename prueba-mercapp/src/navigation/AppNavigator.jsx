@@ -116,6 +116,16 @@ export default function AppNavigator() {
         return () => subscription.remove();
     }, []);
 
+    useEffect(() => {
+        if (!isAuthenticated) {
+            navigation.reset({
+                index: 0,
+                routes: [{ name: 'Login' }]
+            });
+        }
+    }, [isAuthenticated]);
+
+
     return (
         <Stack.Navigator initialRouteName={getInitialRouteName()}
             screenOptions={{
@@ -129,11 +139,11 @@ export default function AppNavigator() {
                 </>
             ) : (
                 <>
-                    {userRole === 'administrador' && <Stack.Screen name='Admin' component={AdminScreen} options={{ title: 'MercApp - Administrador',headerLeft: false }}/>}
-                    {userRole === 'microempresario' && <Stack.Screen name='Micro' component={MicroScreen} options={{ title: 'MercApp - Microempresario', headerLeft: false }}/>}
-                    {userRole === 'usuario' && <Stack.Screen name='Home' component={HomeScreen} options={{ title: 'MercApp - Inicio', headerLeft: false }}/>}
+                    {userRole === 'administrador' && <Stack.Screen name='Admin' component={AdminScreen} options={{ title: 'MercApp - Administrador', headerLeft: false }} />}
+                    {userRole === 'microempresario' && <Stack.Screen name='Micro' component={MicroScreen} options={{ title: 'MercApp - Microempresario', headerLeft: false }} />}
+                    {userRole === 'usuario' && <Stack.Screen name='Home' component={HomeScreen} options={{ title: 'MercApp - Inicio', headerLeft: false }} />}
 
-                    {userRole === 'vendedor' && <Stack.Screen name='Vendor' component={VendedorScreen} options={{ title: 'MercApp - Vendedor', headerLeft: false }}/>}
+                    {userRole === 'vendedor' && <Stack.Screen name='Vendor' component={VendedorScreen} options={{ title: 'MercApp - Vendedor', headerLeft: false }} />}
                     {userRole === 'vendedor' &&
                         <Stack.Screen
                             name='PaymentWaiting'

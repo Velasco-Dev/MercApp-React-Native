@@ -1,5 +1,6 @@
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { cerrarSesionF } from '../auth/auth.service';
 
 // Función para obtener la URL base de la API según la plataforma
 const getApiUrl = () => {
@@ -33,14 +34,29 @@ export const getAuthHeaders = async () => {
 };
 
 export const handleResponse = async (response) => {
+
+    // console.log(response);
+
+    if (response.status === 403  || response.message === 'Token inválido o expirado') {
+        // Token expirado o sesión inválida
+        console.warn("Sesión expirada. Cerrando sesión...");
+        await cerrarSesionF();
+        await AsyncStorage.removeItem('userToken'); // si usas tokens locales
+
+        // Puedes lanzar un error para que el contexto lo detecte
+        throw new Error('Sesión expirada');
+    }
+
+    if (response.status === 400 ) {
+        // Token expirado o sesión inválida
+        console.warn("Error 400");
+    }
+
     const data = await response.json();
+    // console.log(data);
 
     if (!response.ok) {
-        const error = {
-            status: response.status,
-            message: data.message ,//|| 'Error en la petición'
-            details: data.error || null
-        };
+        const error = data?.error || 'Error en la solicitud';
 
         // Manejar diferentes códigos de estado
         // switch (response.status) {
@@ -58,7 +74,7 @@ export const handleResponse = async (response) => {
         //         break;
         // }
 
-        throw error;
+        throw new Error(error);
     }
 
     return data;

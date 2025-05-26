@@ -203,7 +203,6 @@ export default function VendorScreen() {
     const screenWidth = Dimensions.get('window').width;
     const numColumns = screenWidth > 1080 ? 6 : screenWidth <= 500 ? 2 : 3;
 
-
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -253,6 +252,9 @@ export default function VendorScreen() {
                                         </Text>
                                     </View>
                                     <View style={styles.salesList}>
+                                        <Text style={[styles.saleTotal, { color: theme.Colors.ACCENT, alignSelf: 'center' }]}>
+                                            Pago: {String(item.estadoPago).toUpperCase()}
+                                        </Text>
                                         {item.productos.map(product => (
                                             <View key={product.idProducto} style={styles.saleProduct}>
                                                 <Text style={styles.productName}>

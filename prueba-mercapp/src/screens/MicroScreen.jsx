@@ -161,7 +161,7 @@ export default function MicroScreen() {
   const postsRef = ref(db, 'notificaciones-stock');
 
   productosPlano.forEach((producto) => {
-    if (producto.cantidad < 20) {
+    if (producto.cantidad < 10) {
       const productoRef = ref(db, `notificaciones-stock/${producto.idProducto}`);
 
       // Consultar si ya existe notificación para ese producto
