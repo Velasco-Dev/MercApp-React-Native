@@ -59,5 +59,5 @@ src/
 
 ## Contacto
 
-Email: info@mercapp.com
-Website: https://mercapp.com
+Email: rubevel10@gmail.com
+Website: https://prueba-mercapp--1.expo.app/
